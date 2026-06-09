@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Simulator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c26;
+    --border: rgba(255,255,255,0.08);
+    --border-active: rgba(255,255,255,0.18);
+    --text: #f0f0f5;
+    --muted: #8888a0;
+    --accent: #6c63ff;
+    --accent-dim: rgba(108,99,255,0.15);
+    --accent-glow: rgba(108,99,255,0.3);
+    --green: #22d3a0;
+    --green-dim: rgba(34,211,160,0.12);
+    --red: #ff6b6b;
+    --red-dim: rgba(255,107,107,0.12);
+    --amber: #fbbf24;
+    --mono: 'SF Mono', 'Fira Code', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Setup screen ── */
+  #setup-screen {
+    width: 100%;
+    max-width: 640px;
+    padding: 60px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h1 em { font-style: normal; color: var(--accent); }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: -16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 14px 16px;
+    resize: vertical;
+    min-height: 140px;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .persona-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text);
+  }
+
+  .persona-btn:hover { border-color: var(--border-active); background: var(--surface2); }
+  .persona-btn.selected { border-color: var(--accent); background: var(--accent-dim); }
+
+  .persona-name {
+    font-size: 14px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .persona-desc {
+    font-size: 12px;
+    color: var(--muted);
+    display: block;
+    line-height: 1.4;
+  }
+
+  .start-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .start-btn:hover { opacity: 0.9; }
+  .start-btn:active { transform: scale(0.98); }
+  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Interview screen ── */
+  #interview-screen {
+    display: none;
+    width: 100%;
+    max-width: 720px;
+    height: 100vh;
+    flex-direction: column;
+  }
+
+  .interview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .status-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .turn-counter {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+    background: var(--surface);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .end-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .end-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Chat ── */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-track { background: transparent; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border-active); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 90%;
+    animation: fadeUp 0.2s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg.assistant { align-self: flex-start; }
+
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .msg.assistant .avatar {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+
+  .msg.user .avatar {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+
+  .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .msg.user .bubble {
+    background: var(--surface2);
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+  }
+
+  .typing-indicator span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* ── Input area ── */
+  .input-area {
+    padding: 16px 24px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  #user-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    min-height: 48px;
+    max-height: 140px;
+    transition: border-color 0.15s;
+  }
+
+  #user-input:focus { border-color: var(--border-active); }
+  #user-input::placeholder { color: var(--muted); }
+
+  .icon-btn {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .icon-btn:hover { border-color: var(--border-active); color: var(--text); }
+  .icon-btn.active { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .icon-btn.send { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .icon-btn.send:hover { opacity: 0.9; }
+  .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .mic-hint {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    min-height: 16px;
+    transition: color 0.2s;
+  }
+
+  .mic-hint.recording { color: var(--red); }
+
+  /* ── Scorecard ── */
+  .scorecard-card {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 8px 0;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .scorecard-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .score-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .score-item {
+    text-align: center;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .score-value {
+    font-size: 24px;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--text);
+  }
+
+  .score-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 1s ease;
+  }
+
+  .score-overall {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  /* ── Utility ── */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Setup screen ──────────────────────────────────── -->
+<div id="setup-screen">
+  <div>
+    <div class="logo-row">
+      <div class="logo-dot"></div>
+      <span class="logo-text">Interview Simulator</span>
+    </div>
+    <h1>Practice like it's<br>the <em>real thing</em>.</h1>
+  </div>
+  <p class="subtitle">Paste a job description, pick your interviewer style, and get live AI feedback on every answer — spoken or typed.</p>
+
+  <div class="field">
+    <label>Job description</label>
+    <textarea id="job-desc" placeholder="Paste the job listing here — title, responsibilities, requirements. The more detail, the more tailored the questions."></textarea>
+  </div>
+
+  <div class="field">
+    <label>Interviewer style</label>
+    <div class="persona-grid">
+      <button class="persona-btn selected" data-persona="friendly">
+        <span class="persona-name">Friendly</span>
+        <span class="persona-desc">Warm, encouraging, still probing</span>
+      </button>
+      <button class="persona-btn" data-persona="tough">
+        <span class="persona-name">Tough</span>
+        <span class="persona-desc">Senior engineer, no fluff tolerated</span>
+      </button>
+      <button class="persona-btn" data-persona="hr">
+        <span class="persona-name">HR Screen</span>
+        <span class="persona-desc">Behavioural & culture-fit focus</span>
+      </button>
+      <button class="persona-btn" data-persona="technical">
+        <span class="persona-name">Technical</span>
+        <span class="persona-desc">Deep dives, trade-offs, metrics</span>
+      </button>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Start interview
+  </button>
+</div>
+
+<!-- ── Interview screen ──────────────────────────────── -->
+<div id="interview-screen">
+  <div class="interview-header">
+    <div class="header-left">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-label" id="status-label">Connecting…</span>
+    </div>
+    <span class="turn-counter" id="turn-counter">Q 0</span>
+    <button class="end-btn" id="end-btn">End session</button>
+  </div>
+
+  <div class="chat-area" id="chat-area"></div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <button class="icon-btn" id="mic-btn" title="Hold to speak">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </button>
+      <textarea id="user-input" placeholder="Type your answer, or use the mic…" rows="1"></textarea>
+      <button class="icon-btn send" id="send-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+    <div class="mic-hint" id="mic-hint">Click mic to start speaking</div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let systemPrompt = '';
+let history = [];
+let turnCount = 0;
+let selectedPersona = 'friendly';
+let isStreaming = false;
+let recognition = null;
+let isRecording = false;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const setupScreen   = document.getElementById('setup-screen');
+const interviewScreen = document.getElementById('interview-screen');
+const jobDesc       = document.getElementById('job-desc');
+const startBtn      = document.getElementById('start-btn');
+const chatArea      = document.getElementById('chat-area');
+const userInput     = document.getElementById('user-input');
+const sendBtn       = document.getElementById('send-btn');
+const micBtn        = document.getElementById('mic-btn');
+const micHint       = document.getElementById('mic-hint');
+const statusLabel   = document.getElementById('status-label');
+const turnCounter   = document.getElementById('turn-counter');
+const endBtn        = document.getElementById('end-btn');
+
+// ── Setup interactions ────────────────────────────────────────────────────
+jobDesc.addEventListener('input', () => {
+  startBtn.disabled = !jobDesc.value.trim();
+});
+
+document.querySelectorAll('.persona-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedPersona = btn.dataset.persona;
+  });
+});
+
+// ── Auto-resize textarea ──────────────────────────────────────────────────
+userInput.addEventListener('input', () => {
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
+});
+
+userInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
+});
+
+// ── Chat helpers ──────────────────────────────────────────────────────────
+function appendMessage(role, text) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = role === 'assistant' ? 'AI' : 'Me';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+
+  // Check for scorecard tag
+  const scorecardMatch = text.match(/<scorecard>(.*?)<\/scorecard>/s);
+  if (scorecardMatch) {
+    const plainText = text.replace(/<scorecard>.*?<\/scorecard>/s, '').trim();
+    if (plainText) { bubble.textContent = plainText; }
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    chatArea.appendChild(wrap);
+    renderScorecard(scorecardMatch[1]);
+    return wrap;
+  }
+
+  bubble.textContent = text;
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  chatArea.appendChild(wrap);
+  chatArea.scrollTop = chatArea.scrollHeight;
+  return wrap;
+}
+
+function appendStreamingMessage(role) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = role === 'assistant' ? 'AI' : 'Me';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  chatArea.appendChild(wrap);
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  return {
+    wrap,
+    setText(t) {
+      bubble.textContent = t;
+      chatArea.scrollTop = chatArea.scrollHeight;
+    },
+    finalize(fullText) {
+      const scorecardMatch = fullText.match(/<scorecard>(.*?)<\/scorecard>/s);
+      if (scorecardMatch) {
+        const plainText = fullText.replace(/<scorecard>.*?<\/scorecard>/s, '').trim();
+        bubble.textContent = plainText || '';
+        renderScorecard(scorecardMatch[1]);
+      } else {
+        bubble.textContent = fullText;
+      }
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+  };
+}
+
+function renderScorecard(raw) {
+  // Parse "Communication: 8/10 | Relevance: 7/10 | Depth: 6/10 | Overall: ..."
+  const parts = raw.split('|').map(s => s.trim());
+  const scores = {};
+  let overall = '';
+
+  parts.forEach(p => {
+    const m = p.match(/^(.+?):\s*(\d+)\/10$/);
+    if (m) scores[m[1]] = parseInt(m[2]);
+    else if (p.startsWith('Overall:')) overall = p.replace('Overall:', '').trim();
+  });
+
+  const card = document.createElement('div');
+  card.className = 'scorecard-card';
+  card.innerHTML = `
+    <div class="scorecard-title">📊 Session scorecard</div>
+    <div class="score-row">
+      ${Object.entries(scores).map(([label, val]) => `
+        <div class="score-item">
+          <span class="score-label">${label}</span>
+          <span class="score-value">${val}<span style="font-size:14px;color:var(--muted)">/10</span></span>
+          <div class="score-bar"><div class="score-fill" style="width:0%" data-target="${val * 10}%"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    ${overall ? `<div class="score-overall">${overall}</div>` : ''}
+  `;
+
+  chatArea.appendChild(card);
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    card.querySelectorAll('.score-fill').forEach(el => {
+      el.style.width = el.dataset.target;
+    });
+  });
+
+  // Disable input after scorecard
+  userInput.disabled = true;
+  sendBtn.disabled = true;
+  micBtn.disabled = true;
+  statusLabel.textContent = 'Session complete';
+  document.getElementById('status-dot').style.background = 'var(--amber)';
+}
+
+// ── SSE streaming helper ──────────────────────────────────────────────────
+async function streamSSE(url, body, onDelta, onSystem) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`Server error ${res.status}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = JSON.parse(line.slice(6));
+      if (data.type === 'system' && onSystem) onSystem(data.content);
+      if (data.type === 'delta') { fullText += data.content; onDelta(fullText); }
+      if (data.type === 'done') return fullText;
+    }
+  }
+  return fullText;
+}
+
+// ── Start interview ───────────────────────────────────────────────────────
+startBtn.addEventListener('click', async () => {
+  startBtn.disabled = true;
+  setupScreen.style.display = 'none';
+  interviewScreen.style.display = 'flex';
+  statusLabel.textContent = 'Connecting…';
+
+  const streaming = appendStreamingMessage('assistant');
+  isStreaming = true;
+
+  try {
+    const fullText = await streamSSE(
+      '/api/start',
+      { jobDescription: jobDesc.value.trim(), persona: selectedPersona },
+      text => streaming.setText(text),
+      sp => { systemPrompt = sp; }
+    );
+
+    streaming.finalize(fullText);
+    history.push({ role: 'assistant', content: fullText });
+    turnCount++;
+    turnCounter.textContent = `Q ${turnCount}`;
+    statusLabel.textContent = 'Your turn';
+  } catch (e) {
+    streaming.setText('Connection error. Make sure the server is running.');
+  } finally {
+    isStreaming = false;
+  }
+});
+
+// ── Send reply ────────────────────────────────────────────────────────────
+async function sendReply() {
+  const text = userInput.value.trim();
+  if (!text || isStreaming) return;
+
+  userInput.value = '';
+  userInput.style.height = 'auto';
+  appendMessage('user', text);
+  history.push({ role: 'user', content: text });
+
+  isStreaming = true;
+  statusLabel.textContent = 'Thinking…';
+
+  const streaming = appendStreamingMessage('assistant');
+
+  try {
+    const fullText = await streamSSE(
+      '/api/reply',
+      { systemPrompt, history, userMessage: text },
+      t => streaming.setText(t)
+    );
+
+    streaming.finalize(fullText);
+    history.push({ role: 'assistant', content: fullText });
+    turnCount++;
+    turnCounter.textContent = `Q ${turnCount}`;
+    statusLabel.textContent = 'Your turn';
+  } catch (e) {
+    streaming.setText('Something went wrong. Please try again.');
+  } finally {
+    isStreaming = false;
+  }
+}
+
+sendBtn.addEventListener('click', sendReply);
+
+// ── End session ───────────────────────────────────────────────────────────
+endBtn.addEventListener('click', async () => {
+  if (isStreaming) return;
+  const prompt = 'Please wrap up the interview now and give me my scorecard.';
+  userInput.value = prompt;
+  sendReply();
+});
+
+// ── Web Speech API ────────────────────────────────────────────────────────
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+  micBtn.disabled = true;
+  micHint.textContent = 'Speech not supported in this browser — type your answers';
+} else {
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  let finalTranscript = '';
+  let interimTranscript = '';
+
+  recognition.onresult = e => {
+    finalTranscript = '';
+    interimTranscript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i].transcript;
+      if (e.results[i].isFinal) finalTranscript += t;
+      else interimTranscript += t;
+    }
+    userInput.value = (finalTranscript + interimTranscript).trim();
+    userInput.style.height = 'auto';
+    userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
+  };
+
+  recognition.onerror = () => stopRecording();
+  recognition.onend = () => {
+    if (isRecording) {
+      // Auto-send after silence
+      setTimeout(() => {
+        if (userInput.value.trim()) sendReply();
+      }, 400);
+    }
+    stopRecording();
+  };
+
+  function stopRecording() {
+    isRecording = false;
+    micBtn.classList.remove('active');
+    micHint.textContent = 'Click mic to start speaking';
+    micHint.classList.remove('recording');
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (isStreaming) return;
+    if (!isRecording) {
+      isRecording = true;
+      finalTranscript = '';
+      userInput.value = '';
+      micBtn.classList.add('active');
+      micHint.textContent = 'Listening… click again to stop';
+      micHint.classList.add('recording');
+      recognition.start();
+    } else {
+      recognition.stop();
+    }
+  });
+}
+</script>
+</body>
+</html>
