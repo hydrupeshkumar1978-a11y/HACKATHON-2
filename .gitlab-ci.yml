@@ -1,9 +1,49 @@
+image: node:20
+
 stages:
+  - lint
+  - format
+  - type_check
+  - coverage
   - test
 
+before_script:
+  - export BUN_INSTALL="$HOME/.bun"
+  - curl -fsSL https://bun.sh/install | bash
+  - export PATH="$BUN_INSTALL/bin:$PATH"
+  - bun install
+
 lint:
+  stage: lint
+  script:
+    - bun run lint
+  rules:
+    - when: always
+
+format:
+  stage: format
+  script:
+    - bun run format
+  rules:
+    - when: always
+
+type_check:
+  stage: type_check
+  script:
+    - bun run typecheck
+  rules:
+    - when: always
+
+coverage:
+  stage: coverage
+  script:
+    - bun run test
+  rules:
+    - when: always
+
+test:
   stage: test
   script:
-    - echo "No CI tasks configured yet"
+    - bun run test
   rules:
     - when: always
