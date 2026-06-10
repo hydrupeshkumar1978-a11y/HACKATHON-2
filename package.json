@@ -23,6 +23,11 @@
     "start": "bun run src/server.ts",
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --check .",
+    "biome": "biome check .",
+    "oxlint": "oxlint .",
+    "knip": "knip",
+    "audit": "bun audit",
+    "secret-scan": "gitleaks detect --source .",
     "test": "vitest run --coverage"
   },
   "dependencies": {
@@ -41,7 +46,11 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-unused-imports": "^3.1.0",
     "prettier": "^3.0.0",
+    "biome": "npm:@biomejs/biome@^2.4.16",
     "@biomejs/biome": "^2.4.16",
+    "knip": "^6.16.1",
+    "oxlint": "^1.69.0",
+    "gitleaks": "^1.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.0",
     "vitest": "^4.1.8"

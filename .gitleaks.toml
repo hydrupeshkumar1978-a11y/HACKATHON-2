@@ -1,0 +1,6 @@
+[[rules]]
+id = "aws-access-key"
+description = "AWS access key"
+regex = "AKIA[0-9A-Z]{16}"
+[rules.tags]
+rule = "default"
