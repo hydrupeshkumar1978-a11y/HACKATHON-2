@@ -820,17 +820,23 @@ if (!SpeechRecognition) {
   recognition.lang = 'en-US';
 
   let finalTranscript = '';
-  let interimTranscript = '';
+  let processedFinalResults = 0;
 
   recognition.onresult = e => {
-    finalTranscript = '';
-    interimTranscript = '';
-    for (let i = 0; i < e.results.length; i++) {
-      const t = e.results[i][0]?.transcript || '';
-      if (e.results[i].isFinal) finalTranscript += t;
-      else interimTranscript += t;
+    let interimTranscript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const transcript = (e.results[i][0]?.transcript || '').trim();
+      if (!transcript) continue;
+      if (e.results[i].isFinal) {
+        if (i >= processedFinalResults) {
+          finalTranscript = `${finalTranscript} ${transcript}`.trim();
+          processedFinalResults = i + 1;
+        }
+      } else {
+        interimTranscript = `${interimTranscript} ${transcript}`.trim();
+      }
     }
-    userInput.value = (finalTranscript + interimTranscript).trim();
+    userInput.value = `${finalTranscript} ${interimTranscript}`.trim();
     userInput.style.height = 'auto';
     userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
   };
@@ -858,6 +864,7 @@ if (!SpeechRecognition) {
     if (!isRecording) {
       isRecording = true;
       finalTranscript = '';
+      processedFinalResults = 0;
       userInput.value = '';
       micBtn.classList.add('active');
       micHint.textContent = 'Listening… click again to stop';
