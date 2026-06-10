@@ -825,8 +825,8 @@ if (!SpeechRecognition) {
   recognition.onresult = e => {
     finalTranscript = '';
     interimTranscript = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i].transcript;
+    for (let i = 0; i < e.results.length; i++) {
+      const t = e.results[i][0]?.transcript || '';
       if (e.results[i].isFinal) finalTranscript += t;
       else interimTranscript += t;
     }
