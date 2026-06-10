@@ -1,0 +1,7 @@
+# Specify Setup
+
+This repository uses Spec-Kit for spec-driven development.
+
+- `constitution.md` defines the rules and governance.
+- `templates/` contains reusable spec, plan, and task templates.
+- `memory/` stores project-specific guidance.

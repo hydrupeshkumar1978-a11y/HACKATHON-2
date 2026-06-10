@@ -1,0 +1,9 @@
+stages:
+  - test
+
+lint:
+  stage: test
+  script:
+    - echo "No CI tasks configured yet"
+  rules:
+    - when: always
