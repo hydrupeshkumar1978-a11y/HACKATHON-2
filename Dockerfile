@@ -1,11 +1,13 @@
 FROM oven/bun:latest
 
 WORKDIR /app
+ENV HUSKY=0
 
-# Copy project files and install dependencies with Bun (image already contains bun)
-COPY . /app
-RUN bun install
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+
+COPY . .
 
 EXPOSE 3000
 
-CMD ["bun", "run", "src/server.ts"]
+CMD ["bun", "run", "start"]
