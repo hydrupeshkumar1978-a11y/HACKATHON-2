@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/server.ts",
-    "start": "bun run src/server.ts"
+    "start": "bun run src/server.ts",
+    "lint": "eslint . --ext .ts,.js",
+    "format": "prettier --check .",
+    "test": "vitest run --coverage"
   },
   "dependencies": {
     "groq-sdk": "^0.8.0",
@@ -14,6 +17,26 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "latest",
-    "@types/pdf-parse": "latest"
+    "@types/pdf-parse": "latest",
+    "eslint": "^8.57.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-unused-imports": "^3.1.0",
+    "prettier": "^3.0.0",
+    "@biomejs/biome": "^2.4.16",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.0",
+    "vitest": "^4.1.8"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}" : [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}" : [
+      "prettier --write"
+    ]
   }
 }
