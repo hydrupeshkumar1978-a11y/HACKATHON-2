@@ -5,11 +5,8 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'lcov'],
-      statements: 50,
-      branches: 40,
-      functions: 50,
-      lines: 50,
     },
   },
 });

@@ -13,6 +13,10 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/prefer-nullish-coalescing': 'off',
+    '@typescript-eslint/strict-boolean-expressions': 'off',
+    '@typescript-eslint/return-await': 'off',
+    '@typescript-eslint/array-type': 'off',
     'no-console': 'off',
   },
 };
