@@ -1,6 +1,22 @@
 {
   "name": "interview-simulator",
   "version": "1.0.0",
+  "description": "A browser-based interview simulator with AI-driven Q&A, resume uploads, and transcript export.",
+  "repository": {
+    "type": "git",
+    "url": "https://code.swecha.org/hydrupeshkumar/hackathon-2.git"
+  },
+  "keywords": [
+    "interview",
+    "simulator",
+    "AI",
+    "resume",
+    "chatbot",
+    "Bun",
+    "Groq"
+  ],
+  "author": "Hyd Rupesh Kumar",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "dev": "bun run src/server.ts",
