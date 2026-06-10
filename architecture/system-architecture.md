@@ -15,7 +15,7 @@ This document captures the high-level architecture of the AI Interview Simulator
   - Serves static frontend files
 
 - **Groq API**
-  - Provides `mixtral-8x7b-32768`
+  - Provides `groq/compound-mini`
   - Streams response deltas back to Bun
 
 ## Architecture diagram

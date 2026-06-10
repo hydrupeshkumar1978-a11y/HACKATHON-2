@@ -47,7 +47,7 @@ data: {"type":"done"}
 
 ```ts
 const stream = await client.messages.create({
-  model: "mixtral-8x7b-32768",
+  model: "groq/compound-mini",
   system: systemPrompt,
   messages,
   stream: true,

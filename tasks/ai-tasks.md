@@ -9,16 +9,23 @@
 
 ## Groq integration
 
-- [ ] Use `groq-sdk` with `mixtral-8x7b-32768`
+- [ ] Use `groq-sdk` with `groq/compound-mini`
 - [ ] Enable `stream: true` on requests
 - [ ] Confirm the SDK returns incremental `delta` content
 - [ ] Validate model outputs during testing
+ - [x] Use `groq-sdk` with `groq/compound-mini`
+ - [x] Enable `stream: true` on requests
+ - [x] Confirm the SDK returns incremental `delta` content
+ - [x] Validate model outputs during testing
 
 ## Scoring and quality
 
 - [ ] Create a scorecard parser for frontend
 - [ ] Test edge cases where model output includes stray tags
 - [ ] Tune prompts for consistent final summaries
+ - [x] Create a scorecard parser for frontend
+ - [x] Test edge cases where model output includes stray tags
+ - [ ] Tune prompts for consistent final summaries
 
 ## Future AI enhancements
 

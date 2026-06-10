@@ -8,26 +8,44 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c26;
-    --border: rgba(255,255,255,0.08);
-    --border-active: rgba(255,255,255,0.18);
-    --text: #f0f0f5;
-    --muted: #8888a0;
-    --accent: #6c63ff;
-    --accent-dim: rgba(108,99,255,0.15);
-    --accent-glow: rgba(108,99,255,0.3);
-    --green: #22d3a0;
-    --green-dim: rgba(34,211,160,0.12);
-    --red: #ff6b6b;
-    --red-dim: rgba(255,107,107,0.12);
-    --amber: #fbbf24;
+    --bg: #eef2ff;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --border: rgba(15,23,42,0.08);
+    --border-active: rgba(79,70,229,0.2);
+    --text: #111827;
+    --muted: #6b7280;
+    --accent: #4f46e5;
+    --accent-dim: rgba(79,70,229,0.12);
+    --accent-glow: rgba(79,70,229,0.18);
+    --green: #16a34a;
+    --green-dim: rgba(16,163,70,0.12);
+    --red: #dc2626;
+    --red-dim: rgba(220,38,38,0.12);
+    --amber: #f59e0b;
     --mono: 'SF Mono', 'Fira Code', monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --radius: 12px;
-    --radius-sm: 8px;
+    --radius: 16px;
+    --radius-sm: 10px;
   }
+
+  .dark-theme {
++    --bg: #0c1220;
++    --surface: #111827;
++    --surface2: #172133;
++    --border: rgba(255,255,255,0.08);
++    --border-active: rgba(99,102,241,0.24);
++    --text: #f8fafc;
++    --muted: #9ca3af;
++    --accent: #818cf8;
++    --accent-dim: rgba(129,140,248,0.18);
++    --accent-glow: rgba(129,140,248,0.25);
++    --green: #34d399;
++    --green-dim: rgba(52,211,153,0.18);
++    --red: #f87171;
++    --red-dim: rgba(248,113,113,0.16);
++    --amber: #fbbf24;
++  }
 
   body {
     font-family: var(--sans);
@@ -123,6 +141,21 @@
   textarea:focus { border-color: var(--accent); }
   textarea::placeholder { color: var(--muted); }
 
+  input[type="file"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 12px 14px;
+  }
+
+  .resume-help {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
   .persona-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -173,9 +206,21 @@
     gap: 8px;
   }
 
-  .start-btn:hover { opacity: 0.9; }
+  .start-btn:hover { opacity: 0.95; }
   .start-btn:active { transform: scale(0.98); }
-  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .start-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+
+  .theme-toggle:hover { background: var(--surface2); border-color: var(--border-active); }
 
   /* ── Interview screen ── */
   #interview-screen {
@@ -236,6 +281,16 @@
   }
 
   .end-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Modal for review/export */
+  .modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); z-index: 9999; }
+  .modal.hidden { display: none; }
+  .modal-content { background: var(--surface); padding: 20px; border-radius: 12px; width: min(860px, 95%); max-height: 80vh; overflow:auto; border: 1px solid var(--border); }
+  .review-actions { display:flex; gap:10px; margin-top:12px; }
+  .review-actions button { background:var(--accent); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+  .debug-panel { position: fixed; right: 14px; bottom: 14px; width: 360px; max-width: 90vw; background: var(--surface2); border: 1px solid var(--border); padding: 8px; border-radius: 10px; color:var(--muted); font-size:13px; z-index:9998 }
+  .debug-panel pre { max-height:160px; overflow:auto; background:transparent; color:var(--text); margin:6px 0; white-space:pre-wrap }
+  .debug-toggle { position: fixed; right: 14px; bottom: 190px; z-index:9999 }
 
   /* ── Chat ── */
   .chat-area {
@@ -484,6 +539,12 @@
   </div>
 
   <div class="field">
+    <label for="resume-upload">Upload resume</label>
+    <input id="resume-upload" type="file" accept=".pdf,.docx,.txt" />
+    <div id="resume-help" class="resume-help">Upload a PDF, DOCX, or TXT resume to include your experience in the interview prompt.</div>
+  </div>
+
+  <div class="field">
     <label>Interviewer style</label>
     <div class="persona-grid">
       <button class="persona-btn selected" data-persona="friendly">
@@ -505,10 +566,32 @@
     </div>
   </div>
 
-  <button class="start-btn" id="start-btn" disabled>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-    Start interview
-  </button>
+  <div class="field">
+    <label for="model-select">Model</label>
+    <select id="model-select">
+      <option value="groq/compound-mini">groq/compound-mini (default)</option>
+      <option value="groq/compound">groq/compound</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="temp-range">Temperature</label>
+    <input id="temp-range" type="range" min="0" max="1" step="0.05" value="0.0">
+    <div style="margin-top:6px;color:var(--muted);font-size:13px">Value: <span id="temp-value">0.0</span></div>
+  </div>
+
+  <div class="field">
+    <label for="enable-tts">Text-to-Speech</label>
+    <label style="display:flex;align-items:center;gap:8px"><input id="enable-tts" type="checkbox"> Enable assistant speech playback</label>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <button class="theme-toggle" id="theme-toggle" type="button">Light mode</button>
+    <button class="start-btn" id="start-btn" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start interview
+    </button>
+  </div>
 </div>
 
 <!-- ── Interview screen ──────────────────────────────── -->
@@ -519,6 +602,7 @@
       <span class="status-label" id="status-label">Connecting…</span>
     </div>
     <span class="turn-counter" id="turn-counter">Q 0</span>
+    <button class="end-btn" id="review-btn">Review & Export</button>
     <button class="end-btn" id="end-btn">End session</button>
   </div>
 
@@ -538,6 +622,15 @@
   </div>
 </div>
 
+<button id="debug-toggle" class="debug-toggle end-btn">API Debug</button>
+<div id="debug-panel" class="debug-panel hidden">
+  <div style="display:flex;justify-content:space-between;align-items:center"><strong style="color:var(--text)">API Debug</strong><button id="debug-close" class="end-btn">Close</button></div>
+  <div style="margin-top:6px">Last Request:</div>
+  <pre id="debug-request">(none)</pre>
+  <div>Last Response Preview:</div>
+  <pre id="debug-response">(none)</pre>
+</div>
+
 <script>
 // ── State ─────────────────────────────────────────────────────────────────
 let systemPrompt = '';
@@ -547,11 +640,14 @@ let selectedPersona = 'friendly';
 let isStreaming = false;
 let recognition = null;
 let isRecording = false;
+let resumeText = '';
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const setupScreen   = document.getElementById('setup-screen');
 const interviewScreen = document.getElementById('interview-screen');
 const jobDesc       = document.getElementById('job-desc');
+const resumeUpload  = document.getElementById('resume-upload');
+const resumeHelp    = document.getElementById('resume-help');
 const startBtn      = document.getElementById('start-btn');
 const chatArea      = document.getElementById('chat-area');
 const userInput     = document.getElementById('user-input');
@@ -561,6 +657,12 @@ const micHint       = document.getElementById('mic-hint');
 const statusLabel   = document.getElementById('status-label');
 const turnCounter   = document.getElementById('turn-counter');
 const endBtn        = document.getElementById('end-btn');
+const reviewBtn     = document.getElementById('review-btn');
+const themeToggle   = document.getElementById('theme-toggle');
+const debugToggle    = document.getElementById('debug-toggle');
+const debugPanel     = document.getElementById('debug-panel');
+const debugReq       = document.getElementById('debug-request');
+const debugRes       = document.getElementById('debug-response');
 
 // ── Setup interactions ────────────────────────────────────────────────────
 jobDesc.addEventListener('input', () => {
@@ -575,6 +677,37 @@ document.querySelectorAll('.persona-btn').forEach(btn => {
   });
 });
 
+resumeUpload.addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+  if (!file) {
+    resumeText = '';
+    resumeHelp.textContent = 'Upload a PDF, DOCX, or TXT resume to include your experience in the interview prompt.';
+    return;
+  }
+
+  resumeHelp.textContent = `Uploading ${file.name}...`;
+  const formData = new FormData();
+  formData.append('resume', file);
+
+  try {
+    const res = await fetch('/api/upload-resume', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load resume');
+    resumeText = data.resumeText || '';
+    resumeHelp.textContent = resumeText
+      ? `Loaded ${data.fileName}. Resume summary ready.`
+      : `Loaded ${data.fileName}, but no text was extracted.`;
+    try {
+      const saved = JSON.parse(localStorage.getItem('interview.settings') || '{}');
+      saved.resumeText = resumeText;
+      localStorage.setItem('interview.settings', JSON.stringify(saved));
+    } catch (e) {}
+  } catch (err) {
+    resumeText = '';
+    resumeHelp.textContent = `Resume upload failed: ${err.message || err}`;
+  }
+});
+
 // ── Auto-resize textarea ──────────────────────────────────────────────────
 userInput.addEventListener('input', () => {
   userInput.style.height = 'auto';
@@ -583,6 +716,24 @@ userInput.addEventListener('input', () => {
 
 userInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
+});
+
+function applyPreferredTheme(theme) {
+  document.documentElement.classList.toggle('dark-theme', theme === 'dark');
+  themeToggle.textContent = theme === 'dark' ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('interview.theme', theme);
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('interview.theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved === 'dark' || (!saved && prefersDark) ? 'dark' : 'light';
+  applyPreferredTheme(theme);
+})();
+
+themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light';
+  applyPreferredTheme(current === 'dark' ? 'light' : 'dark');
 });
 
 // ── Chat helpers ──────────────────────────────────────────────────────────
@@ -650,6 +801,16 @@ function appendStreamingMessage(role) {
         bubble.textContent = fullText;
       }
       chatArea.scrollTop = chatArea.scrollHeight;
+      // Text-to-speech if enabled
+      try {
+        const ttsEnabled = document.getElementById('enable-tts')?.checked;
+        if (ttsEnabled && typeof window.speechSynthesis !== 'undefined') {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(fullText);
+          u.rate = 1.0;
+          window.speechSynthesis.speak(u);
+        }
+      } catch (e) {}
     }
   };
 }
@@ -702,13 +863,21 @@ function renderScorecard(raw) {
 
 // ── SSE streaming helper ──────────────────────────────────────────────────
 async function streamSSE(url, body, onDelta, onSystem) {
+  // update debug panel with outgoing request
+  try { debugReq.textContent = JSON.stringify(body, null, 2); } catch (e) {}
+
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
-  if (!res.ok) throw new Error(`Server error ${res.status}`);
+  if (!res.ok) {
+    try { debugRes.textContent = `HTTP ${res.status} ${res.statusText}`; } catch (e) {}
+    throw new Error(`Server error ${res.status}`);
+  }
+
+  try { debugRes.textContent = 'Streaming...'; } catch (e) {}
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -725,6 +894,7 @@ async function streamSSE(url, body, onDelta, onSystem) {
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const data = JSON.parse(line.slice(6));
+      try { debugRes.textContent = (debugRes.textContent || '') + '\n' + JSON.stringify(data).slice(0,200); } catch (e) {}
       if (data.type === 'system' && onSystem) onSystem(data.content);
       if (data.type === 'delta') { fullText += data.content; onDelta(fullText); }
       if (data.type === 'done') return fullText;
@@ -744,15 +914,34 @@ startBtn.addEventListener('click', async () => {
   isStreaming = true;
 
   try {
+    // try restore per-job session if present
+    const jobKey = 'interview.session.' + encodeURIComponent(jobDesc.value.trim());
+    const saved = JSON.parse(localStorage.getItem(jobKey) || 'null');
+    if (saved && Array.isArray(saved.history) && saved.history.length) {
+      history = saved.history;
+      systemPrompt = saved.systemPrompt || systemPrompt;
+      resumeText = saved.resumeText || '';
+      chatArea.innerHTML = '';
+      history.forEach(h => appendMessage(h.role, h.content));
+      turnCount = saved.turnCount || history.filter(h => h.role === 'assistant').length;
+      turnCounter.textContent = `Q ${turnCount}`;
+    }
     const fullText = await streamSSE(
       '/api/start',
-      { jobDescription: jobDesc.value.trim(), persona: selectedPersona },
+      {
+        jobDescription: jobDesc.value.trim(),
+        persona: selectedPersona,
+        model: document.getElementById('model-select').value,
+        temperature: parseFloat(document.getElementById('temp-range').value),
+        resumeText,
+      },
       text => streaming.setText(text),
       sp => { systemPrompt = sp; }
     );
 
     streaming.finalize(fullText);
     history.push({ role: 'assistant', content: fullText });
+    try { localStorage.setItem(jobKey, JSON.stringify({ systemPrompt, history, turnCount, resumeText })); } catch (e) {}
     turnCount++;
     turnCounter.textContent = `Q ${turnCount}`;
     statusLabel.textContent = 'Your turn';
@@ -781,12 +970,16 @@ async function sendReply() {
   try {
     const fullText = await streamSSE(
       '/api/reply',
-      { systemPrompt, history, userMessage: text },
+      { systemPrompt, history, userMessage: text, model: document.getElementById('model-select').value, temperature: parseFloat(document.getElementById('temp-range').value) },
       t => streaming.setText(t)
     );
 
     streaming.finalize(fullText);
     history.push({ role: 'assistant', content: fullText });
+    try {
+      const jobKey = 'interview.session.' + encodeURIComponent(jobDesc.value.trim());
+      localStorage.setItem(jobKey, JSON.stringify({ systemPrompt, history, turnCount, resumeText }));
+    } catch (e) {}
     turnCount++;
     turnCounter.textContent = `Q ${turnCount}`;
     statusLabel.textContent = 'Your turn';
@@ -798,6 +991,22 @@ async function sendReply() {
 }
 
 sendBtn.addEventListener('click', sendReply);
+
+// Keyboard shortcuts: Ctrl/Cmd+S to start/send, Ctrl/Cmd+R to review, Esc to close
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    if (setupScreen.style.display !== 'none') startBtn.click(); else sendReply();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
+    e.preventDefault();
+    reviewBtn.click();
+  }
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('review-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+});
 
 // ── End session ───────────────────────────────────────────────────────────
 endBtn.addEventListener('click', async () => {
@@ -868,6 +1077,127 @@ if (!SpeechRecognition) {
     }
   });
 }
+
+// ── Persist settings and sessions ─────────────────────────────────────────
+(function persistSettings() {
+  const modelSelect = document.getElementById('model-select');
+  const tempRange = document.getElementById('temp-range');
+  const tempValue = document.getElementById('temp-value');
+  const saved = JSON.parse(localStorage.getItem('interview.settings') || '{}');
+  if (saved.model) modelSelect.value = saved.model;
+  if (typeof saved.temperature === 'number') tempRange.value = saved.temperature;
+  if (saved.resumeText) {
+    resumeText = saved.resumeText;
+    resumeHelp.textContent = 'Resume loaded from previous session.';
+  }
+  tempValue.textContent = parseFloat(tempRange.value).toFixed(2);
+
+  modelSelect.addEventListener('change', () => {
+    saved.model = modelSelect.value;
+    localStorage.setItem('interview.settings', JSON.stringify(saved));
+  });
+  tempRange.addEventListener('input', () => {
+    tempValue.textContent = parseFloat(tempRange.value).toFixed(2);
+    saved.temperature = parseFloat(tempRange.value);
+    localStorage.setItem('interview.settings', JSON.stringify(saved));
+  });
+
+  // Save session after each completed assistant reply
+  const origPush = history.push;
+  history.push = function () {
+    const res = origPush.apply(this, arguments);
+    try {
+      localStorage.setItem('interview.last', JSON.stringify({ systemPrompt, history }));
+    } catch (e) {}
+    return res;
+  };
+
+  // Restore last session if present
+  const last = JSON.parse(localStorage.getItem('interview.last') || 'null');
+  if (last && last.history && last.systemPrompt) {
+    systemPrompt = last.systemPrompt;
+    history = last.history;
+    // populate messages in UI lazily when interview screen opens
+  }
+})();
+
+// ── Review / Export modal ─────────────────────────────────────────────────
+(function reviewExport() {
+  const modal = document.createElement('div');
+  modal.id = 'review-modal';
+  modal.className = 'modal hidden';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:600">Session review</div>
+        <div><button id="close-review" class="end-btn">Close</button></div>
+      </div>
+      <pre id="review-content" style="white-space:pre-wrap;font-family:var(--sans);font-size:13px;color:var(--text)"></pre>
+      <div class="review-actions">
+        <button id="export-json">Export JSON</button>
+        <button id="export-txt">Export Text</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  function buildTranscript() {
+    const model = document.getElementById('model-select').value;
+    const temperature = parseFloat(document.getElementById('temp-range').value);
+    return {
+      resumeText,
+      systemPrompt,
+      history,
+      turnCount,
+      settings: { model, temperature },
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  reviewBtn.addEventListener('click', () => {
+    const modalEl = document.getElementById('review-modal');
+    const content = document.getElementById('review-content');
+    const t = buildTranscript();
+    const resumeSection = t.resumeText ? `RESUME:\n${t.resumeText}\n\n` : '';
+    content.textContent = resumeSection + t.history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
+    modalEl.classList.remove('hidden');
+  });
+
+  debugToggle.addEventListener('click', () => {
+    debugPanel.classList.toggle('hidden');
+  });
+
+  document.getElementById('debug-close').addEventListener('click', () => debugPanel.classList.add('hidden'));
+
+  document.body.addEventListener('click', e => {
+    if (e.target && e.target.id === 'close-review') document.getElementById('review-modal').classList.add('hidden');
+  });
+
+  document.getElementById('export-json').addEventListener('click', () => {
+    const data = JSON.stringify(buildTranscript(), null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'interview-transcript.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('export-txt').addEventListener('click', () => {
+    const t = buildTranscript();
+    const resumeSection = t.resumeText ? `RESUME:\n${t.resumeText}\n\n` : '';
+    const text = resumeSection + t.history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'interview-transcript.txt'; a.click();
+    URL.revokeObjectURL(url);
+
+    // Clear the temporary review content and remove the last transcript backup
+    document.getElementById('review-content').textContent = '';
+    document.getElementById('review-modal').classList.add('hidden');
+    localStorage.removeItem('interview.last');
+  });
+})();
 </script>
 </body>
 </html>

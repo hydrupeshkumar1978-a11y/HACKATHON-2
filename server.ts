@@ -72,11 +72,13 @@ async function handleStartInterview(req: Request): Promise<Response> {
 
   const systemPrompt = buildSystemPrompt(jobDescription, persona || "friendly");
 
-  const stream = await client.messages.create({
-    model: "mixtral-8x7b-32768",
+  const stream = await client.chat.completions.create({
+    model: "groq/compound-mini",
     max_tokens: 400,
-    system: systemPrompt,
-    messages: [{ role: "user", content: "Begin the interview." }],
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: "Begin the interview." },
+    ],
     stream: true,
   });
 
@@ -127,11 +129,10 @@ async function handleReply(req: Request): Promise<Response> {
     { role: "user" as const, content: userMessage },
   ];
 
-  const stream = await client.messages.create({
-    model: "mixtral-8x7b-32768",
+  const stream = await client.chat.completions.create({
+    model: "groq/compound-mini",
     max_tokens: 400,
-    system: systemPrompt,
-    messages,
+    messages: [{ role: "system", content: systemPrompt }, ...messages],
     stream: true,
   });
 

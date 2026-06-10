@@ -7,9 +7,13 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
-    "groq-sdk": "^0.8.0"
+    "groq-sdk": "^0.8.0",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.4.18"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "@types/pdf-parse": "latest"
   }
 }

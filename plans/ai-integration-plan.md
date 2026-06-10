@@ -12,7 +12,7 @@ Define how the application uses Groq API and the `groq-sdk` to power the intervi
 
 ## Model and SDK
 
-- Model: `mixtral-8x7b-32768`
+- Model: `groq/compound-mini`
 - SDK: `groq-sdk`
 - Streaming: `stream: true`
 

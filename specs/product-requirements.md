@@ -27,7 +27,7 @@ Build an AI Interview Simulator that lets users paste a job description, select 
 ## Must-have features
 
 - Bun-powered static server and backend handler
-- Groq `mixtral-8x7b-32768` AI integration with `groq-sdk`
+- Groq `groq/compound-mini` AI integration with `groq-sdk`
 - SSE response streaming for live token rendering
 - Frontend state management for `systemPrompt`, `history`, and `userMessage`
 - Browser Web Speech API support for voice answer capture

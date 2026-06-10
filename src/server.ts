@@ -1,6 +1,8 @@
 import Groq from "groq-sdk";
 import { readFileSync } from "fs";
 import path from "path";
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 
 const client = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -28,8 +30,33 @@ function serveStatic(filePath: string): Response {
   }
 }
 
+function normalizeText(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+async function extractTextFromResume(fileBuffer: ArrayBuffer, fileName: string): Promise<string> {
+  const ext = path.extname(fileName).toLowerCase();
+  const buffer = Buffer.from(fileBuffer);
+
+  if (ext === '.txt') {
+    return normalizeText(buffer.toString('utf-8'));
+  }
+
+  if (ext === '.pdf') {
+    const parsed = await pdfParse(buffer);
+    return normalizeText(parsed.text || '');
+  }
+
+  if (ext === '.docx') {
+    const result = await mammoth.extractRawText({ buffer });
+    return normalizeText(result.value || '');
+  }
+
+  throw new Error('Resume format not supported. Please upload PDF, DOCX, or TXT.');
+}
+
 // ── System prompt builder ─────────────────────────────────────────────────
-function buildSystemPrompt(jobDescription: string, persona: string): string {
+function buildSystemPrompt(jobDescription: string, persona: string, resumeText?: string): string {
   const personas: Record<string, string> = {
     friendly:
       "You are a warm, encouraging interviewer. You ask follow-up questions, smile through text, and create a supportive atmosphere — but still probe for real depth.",
@@ -42,6 +69,7 @@ function buildSystemPrompt(jobDescription: string, persona: string): string {
 
   return `${personas[persona] || personas.friendly}
 
+${resumeText ? `The candidate's resume summary is below:\n---\n${resumeText}\n---\n` : ''}
 You are interviewing a candidate for the following role:
 ---
 ${jobDescription}
@@ -63,20 +91,28 @@ async function handleStartInterview(req: Request): Promise<Response> {
   const body = (await req.json()) as {
     jobDescription: string;
     persona: string;
+    model?: string;
+    temperature?: number;
+    resumeText?: string;
   };
-  const { jobDescription, persona } = body;
+  const { jobDescription, persona, model: requestedModel, temperature, resumeText } = body;
 
   if (!jobDescription?.trim()) {
     return Response.json({ error: "Job description is required" }, { status: 400 });
   }
 
-  const systemPrompt = buildSystemPrompt(jobDescription, persona || "friendly");
+  const systemPrompt = buildSystemPrompt(jobDescription, persona || "friendly", resumeText);
 
-  const stream = await client.messages.create({
-    model: "mixtral-8x7b-32768",
+  const model = requestedModel || "groq/compound-mini";
+
+  const stream = await client.chat.completions.create({
+    model,
     max_tokens: 400,
-    system: systemPrompt,
-    messages: [{ role: "user", content: "Begin the interview." }],
+    temperature: typeof temperature === 'number' ? temperature : undefined,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: "Begin the interview." },
+    ],
     stream: true,
   });
 
@@ -118,20 +154,24 @@ async function handleReply(req: Request): Promise<Response> {
     systemPrompt: string;
     history: { role: "user" | "assistant"; content: string }[];
     userMessage: string;
+    model?: string;
+    temperature?: number;
   };
 
-  const { systemPrompt, history, userMessage } = body;
+  const { systemPrompt, history, userMessage, model: requestedModel, temperature } = body;
 
   const messages = [
     ...history,
     { role: "user" as const, content: userMessage },
   ];
 
-  const stream = await client.messages.create({
-    model: "mixtral-8x7b-32768",
+  const model = requestedModel || "groq/compound-mini";
+
+  const stream = await client.chat.completions.create({
+    model,
     max_tokens: 400,
-    system: systemPrompt,
-    messages,
+    temperature: typeof temperature === 'number' ? temperature : undefined,
+    messages: [{ role: "system", content: systemPrompt }, ...messages],
     stream: true,
   });
 
@@ -161,6 +201,23 @@ async function handleReply(req: Request): Promise<Response> {
   });
 }
 
+async function handleUploadResume(req: Request): Promise<Response> {
+  try {
+    const form = await req.formData();
+    const file = form.get('resume');
+
+    if (!file || typeof file === 'string') {
+      return Response.json({ error: 'Resume is required' }, { status: 400 });
+    }
+
+    const name = file.name || 'resume';
+    const resumeText = await extractTextFromResume(await file.arrayBuffer(), name);
+    return Response.json({ resumeText, fileName: name });
+  } catch (error) {
+    return Response.json({ error: error?.message || 'Unable to parse resume' }, { status: 400 });
+  }
+}
+
 // ── Main server ────────────────────────────────────────────────────────────
 const server = Bun.serve({
   port: PORT,
@@ -172,6 +229,9 @@ const server = Bun.serve({
     }
     if (req.method === "POST" && url.pathname === "/api/reply") {
       return handleReply(req);
+    }
+    if (req.method === "POST" && url.pathname === "/api/upload-resume") {
+      return handleUploadResume(req);
     }
 
     // Static files

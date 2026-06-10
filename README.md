@@ -52,9 +52,9 @@ Browser                          Bun Server                    Groq API
 **Key design decisions:**
 
 - **Stateless server** — the client holds `systemPrompt` + full `history` and sends them with every request. Zero session storage needed.
-- **Streaming SSE** — Mixtral's response streams token-by-token. The UI renders it live, which looks great in demos.
+- **Streaming SSE** — Groq responses stream token-by-token. The UI renders it live, which looks great in demos.
 - **Web Speech API** — mic input is handled entirely in the browser. No audio ever hits the server.
-- **Scorecard parsing** — Mixtral wraps its final scorecard in `<scorecard>` tags. The frontend parses this and renders animated score bars.
+- **Scorecard parsing** — the model wraps its final scorecard in `<scorecard>` tags. The frontend parses this and renders animated score bars.
 
 ---
 
@@ -73,7 +73,7 @@ Browser                          Bun Server                    Groq API
 
 **Add voice output (TTS)**
 ```ts
-// Stream Mixtral's reply text to ElevenLabs or use browser SpeechSynthesis:
+// Stream Groq's reply text to ElevenLabs or use browser SpeechSynthesis:
 const utterance = new SpeechSynthesisUtterance(fullText);
 window.speechSynthesis.speak(utterance);
 ```
@@ -92,7 +92,18 @@ Store `history` in `localStorage` keyed by job title — users can resume a prac
 ## Stack
 
 - **Runtime**: Bun
-- **AI**: Groq Mixtral (mixtral-8x7b-32768) via `groq-sdk`
+- **AI**: Groq Compound Mini (`groq/compound-mini`) via `groq-sdk`
 - **Streaming**: Server-Sent Events (SSE)
 - **Speech**: Web Speech API (browser-native, no extra dependency)
 - **Frontend**: Vanilla JS SPA — no framework needed
+
+### Features added
+
+- Model selector and temperature control on the setup screen (sent to server)
+- Resume upload support for PDF, DOCX, and TXT files with text extraction
+- Per-job session persistence and restore (localStorage)
+- Text-to-speech playback for assistant replies (toggleable in setup)
+- Review & Export transcript (JSON / TXT)
+- API debug panel showing last request and streaming response preview
+- Keyboard shortcuts: `Ctrl/Cmd+S` to start/send, `Ctrl/Cmd+R` to open review, `Esc` to close modals
+- Light theme by default with an optional dark mode toggle
