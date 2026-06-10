@@ -16,34 +16,34 @@ before_script:
 lint:
   stage: lint
   script:
-    - bun run lint
+    - npx eslint . --ext .ts,.js
   rules:
     - when: always
 
 format:
   stage: format
   script:
-    - bun run format
+    - npx prettier --check .
   rules:
     - when: always
 
 type_check:
   stage: type_check
   script:
-    - bun run typecheck
+    - npx tsc --noEmit
   rules:
     - when: always
 
 coverage:
   stage: coverage
   script:
-    - bun run test
+    - npx vitest run --coverage
   rules:
     - when: always
 
 test:
   stage: test
   script:
-    - bun run test
+    - npx vitest run
   rules:
     - when: always
