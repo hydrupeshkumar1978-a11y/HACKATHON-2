@@ -527,47 +527,56 @@
   <div>
     <div class="logo-row">
       <div class="logo-dot"></div>
-      <span class="logo-text">Interview Simulator</span>
+      <span class="logo-text" id="app-title">Interview Simulator</span>
     </div>
-    <h1>Practice like it's<br>the <em>real thing</em>.</h1>
+    <h1 id="app-heading">Practice like it's<br>the <em>real thing</em>.</h1>
   </div>
-  <p class="subtitle">Paste a job description, pick your interviewer style, and get live AI feedback on every answer — spoken or typed.</p>
+  <p class="subtitle" id="app-subtitle">Paste a job description, pick your interviewer style, and get live AI feedback on every answer — spoken or typed.</p>
 
   <div class="field">
-    <label>Job description</label>
+    <label id="job-desc-label">Job description</label>
     <textarea id="job-desc" placeholder="Paste the job listing here — title, responsibilities, requirements. The more detail, the more tailored the questions."></textarea>
   </div>
 
   <div class="field">
-    <label for="resume-upload">Upload resume</label>
+    <label id="resume-upload-label" for="resume-upload">Upload resume</label>
     <input id="resume-upload" type="file" accept=".pdf,.docx,.txt" />
     <div id="resume-help" class="resume-help">Upload a PDF, DOCX, or TXT resume to include your experience in the interview prompt.</div>
   </div>
 
   <div class="field">
-    <label>Interviewer style</label>
+    <label id="language-label" for="language-select">Interview language</label>
+    <select id="language-select">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="te">తెలుగు</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label id="style-label">Interviewer style</label>
     <div class="persona-grid">
       <button class="persona-btn selected" data-persona="friendly">
-        <span class="persona-name">Friendly</span>
-        <span class="persona-desc">Warm, encouraging, still probing</span>
+        <span class="persona-name" id="persona-friendly-name">Friendly</span>
+        <span class="persona-desc" id="persona-friendly-desc">Warm, encouraging, still probing</span>
       </button>
       <button class="persona-btn" data-persona="tough">
-        <span class="persona-name">Tough</span>
-        <span class="persona-desc">Senior engineer, no fluff tolerated</span>
+        <span class="persona-name" id="persona-tough-name">Tough</span>
+        <span class="persona-desc" id="persona-tough-desc">Senior engineer, no fluff tolerated</span>
       </button>
       <button class="persona-btn" data-persona="hr">
-        <span class="persona-name">HR Screen</span>
-        <span class="persona-desc">Behavioural & culture-fit focus</span>
+        <span class="persona-name" id="persona-hr-name">HR Screen</span>
+        <span class="persona-desc" id="persona-hr-desc">Behavioural & culture-fit focus</span>
       </button>
       <button class="persona-btn" data-persona="technical">
-        <span class="persona-name">Technical</span>
-        <span class="persona-desc">Deep dives, trade-offs, metrics</span>
+        <span class="persona-name" id="persona-technical-name">Technical</span>
+        <span class="persona-desc" id="persona-technical-desc">Deep dives, trade-offs, metrics</span>
       </button>
     </div>
   </div>
 
   <div class="field">
-    <label for="model-select">Model</label>
+    <label id="model-select-label" for="model-select">Model</label>
     <select id="model-select">
       <option value="groq/compound-mini">groq/compound-mini (default)</option>
       <option value="groq/compound">groq/compound</option>
@@ -575,14 +584,14 @@
   </div>
 
   <div class="field">
-    <label for="temp-range">Temperature</label>
+    <label id="temp-range-label" for="temp-range">Temperature</label>
     <input id="temp-range" type="range" min="0" max="1" step="0.05" value="0.0">
     <div style="margin-top:6px;color:var(--muted);font-size:13px">Value: <span id="temp-value">0.0</span></div>
   </div>
 
   <div class="field">
-    <label for="enable-tts">Text-to-Speech</label>
-    <label style="display:flex;align-items:center;gap:8px"><input id="enable-tts" type="checkbox"> Enable assistant speech playback</label>
+    <label id="tts-label" for="enable-tts">Text-to-Speech</label>
+    <label style="display:flex;align-items:center;gap:8px"><input id="enable-tts" type="checkbox"> <span id="tts-toggle">Enable assistant speech playback</span></label>
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -637,10 +646,193 @@ let systemPrompt = '';
 let history = [];
 let turnCount = 0;
 let selectedPersona = 'friendly';
+let selectedLanguage = 'en';
 let isStreaming = false;
 let recognition = null;
 let isRecording = false;
 let resumeText = '';
+
+const translations = {
+  en: {
+    appTitle: 'Interview Simulator',
+    heading: `Practice like it's\nthe real thing.`,
+    subtitle: 'Paste a job description, pick your interviewer style, and get live AI feedback on every answer — spoken or typed.',
+    jobLabel: 'Job description',
+    jobPlaceholder: 'Paste the job listing here — title, responsibilities, requirements. The more detail, the more tailored the questions.',
+    resumeLabel: 'Upload resume',
+    resumeHelp: 'Upload a PDF, DOCX, or TXT resume to include your experience in the interview prompt.',
+    languageLabel: 'Interview language',
+    styleLabel: 'Interviewer style',
+    modelLabel: 'Model',
+    tempLabel: 'Temperature',
+    ttsLabel: 'Text-to-Speech',
+    ttsToggle: 'Enable assistant speech playback',
+    startButton: 'Start interview',
+    lightMode: 'Light mode',
+    darkMode: 'Dark mode',
+    personaFriendlyName: 'Friendly',
+    personaFriendlyDesc: 'Warm, encouraging, still probing',
+    personaToughName: 'Tough',
+    personaToughDesc: 'Senior engineer, no fluff tolerated',
+    personaHrName: 'HR Screen',
+    personaHrDesc: 'Behavioural & culture-fit focus',
+    personaTechnicalName: 'Technical',
+    personaTechnicalDesc: 'Deep dives, trade-offs, metrics',
+    statusConnecting: 'Connecting…',
+    statusThinking: 'Thinking…',
+    statusYourTurn: 'Your turn',
+    statusComplete: 'Session complete',
+    micHintDefault: 'Click mic to start speaking',
+    micHintSpeechNotSupported: 'Speech not supported in this browser — type your answers',
+    micHintListening: 'Listening… click again to stop',
+    reviewExport: 'Review & Export',
+    endSession: 'End session',
+    reviewTitle: 'Session review',
+    close: 'Close',
+    exportJson: 'Export JSON',
+    exportTxt: 'Export Text',
+    apiDebug: 'API Debug',
+    lastRequest: 'Last Request:',
+    lastResponsePreview: 'Last Response Preview:',
+    sessionSaved: 'Resume loaded from previous session.',
+  },
+  hi: {
+    appTitle: 'इंटरव्यू सिम्युलेटर',
+    heading: 'अभ्यास करें जैसे यह असली इंटरव्यू हो।',
+    subtitle: 'एक नौकरी विवरण चिपकाएँ, इंटरव्यूअर शैली चुनें, और हर उत्तर पर लाइव AI प्रतिक्रिया प्राप्त करें — बोलकर या टाइप करके।',
+    jobLabel: 'नौकरी विवरण',
+    jobPlaceholder: 'यहां नौकरी विवरण चिपकाएँ — शीर्षक, जिम्मेदारियाँ, आवश्यकताएँ। जितना अधिक विवरण, प्रश्न उतने ही बेहतर होंगे।',
+    resumeLabel: 'रिज़्यूमे अपलोड करें',
+    resumeHelp: 'अपनी अनुभव को इंटरव्यू प्रॉम्प्ट में शामिल करने के लिए PDF, DOCX, या TXT रिज़्यूमे अपलोड करें।',
+    languageLabel: 'इंटरव्यू भाषा',
+    styleLabel: 'इंटरव्यूअर शैली',
+    modelLabel: 'मॉडल',
+    tempLabel: 'टेम्परेचर',
+    ttsLabel: 'टेक्स्ट-टू-स्पीच',
+    ttsToggle: 'सहायक वॉइस प्लेबैक सक्षम करें',
+    startButton: 'इंटरव्यू शुरू करें',
+    lightMode: 'लाइट मोड',
+    darkMode: 'डार्क मोड',
+    personaFriendlyName: 'फ्रेंडली',
+    personaFriendlyDesc: 'गरमजोशी से, प्रोत्साहित करते हुए, फिर भी पूछताछ',
+    personaToughName: 'टफ',
+    personaToughDesc: 'सीनियर इंजीनियर, कोई फालतू बात नहीं',
+    personaHrName: 'HR स्क्रीन',
+    personaHrDesc: 'व्यवहारिक और संस्कृति-फिट फोकस',
+    personaTechnicalName: 'टेक्निकल',
+    personaTechnicalDesc: 'डीप डाइव्स, ट्रेड-ऑफ, मीट्रिक्स',
+    statusConnecting: 'कनेक्ट कर रहे हैं…',
+    statusThinking: 'सोच रहे हैं…',
+    statusYourTurn: 'अब आपकी बारी',
+    statusComplete: 'सत्र पूरा',
+    micHintDefault: 'बोलने के लिए माइक पर क्लिक करें',
+    micHintSpeechNotSupported: 'इस ब्राउज़र में स्पीच समर्थित नहीं है — अपना उत्तर टाइप करें',
+    micHintListening: 'सुन रहे हैं… बंद करने के लिए फिर से क्लिक करें',
+    reviewExport: 'समीक्षा और निर्यात',
+    endSession: 'सत्र समाप्त करें',
+    reviewTitle: 'सत्र समीक्षा',
+    close: 'बंद करें',
+    exportJson: 'JSON निर्यात करें',
+    exportTxt: 'टेक्स्ट निर्यात करें',
+    apiDebug: 'API डिबग',
+    lastRequest: 'आख़िरी अनुरोध:',
+    lastResponsePreview: 'आख़िरी प्रतिक्रिया पूर्वावलोकन:',
+    sessionSaved: 'पिछले सत्र से रिज़्यूमे लोड किया गया।',
+  },
+  te: {
+    appTitle: 'ఇంటర్వ్యూ సిమ్యులేటర్',
+    heading: 'ఇది నిజమైనదే అనిపించేలా అభ్యాసం చేయండి.',
+    subtitle: 'ఒక ఉద్యోగ వివరణ పేస్ట్ చేయండి, ఇంటర్వ్యూ శైలి ఎంచుకోండి, మరియు ప్రతిసారి సమాధానానికి లైవ్ AI ఫీడ్‌బ్యాక్ పొందండి — మాట్లాడి లేదా టైప్ చేసి.',
+    jobLabel: 'ఉద్యోగ వివరణ',
+    jobPlaceholder: 'ఇక్కడ ఉద్యోగ వివరణను పేస్ట్ చేయండి — శీర్షిక, బాధ్యతలు, అవసరాలు. ఎక్కువ వివరాలు ఉంటే ప్రశ్నలు మరింత అనుకూలంగా ఉంటాయి.',
+    resumeLabel: 'రెజ్యూమ్ అప్లోడ్ చేయండి',
+    resumeHelp: 'మీ అనుభవాన్ని ఇంటర్వ్యూ ప్రాంప్ట్‌లో చేర్చడానికి PDF, DOCX, లేదా TXT రెజ్యూమ్ అప్లోడ్ చేయండి.',
+    languageLabel: 'ఇంటర్వ్యూ భాష',
+    styleLabel: 'ఇంటర్వ్యూ శైలి',
+    modelLabel: 'మోడల్',
+    tempLabel: 'తాపన',
+    ttsLabel: 'టెక్స్‍ट-టు-స్పీచ్',
+    ttsToggle: 'సహాయక వాయిస్ ప్లేబ్యాక్‌ను యాక్టివేట్ చేయండి',
+    startButton: 'ఇంటర్వ్యూను ప్రారంభించండి',
+    lightMode: 'లైట్ మోడ్',
+    darkMode: 'డార్క్ మోడ్',
+    personaFriendlyName: 'ఫ్రెండ్‌లీ',
+    personaFriendlyDesc: 'మధురంగా, ప్రోత్సహిస్తూ, ఇంకా విచారణ',
+    personaToughName: 'టఫ్',
+    personaToughDesc: 'సీనియర్ ఇంజనీర్, ఎలాంటి ఖాళీ మాటలు ఉండవు',
+    personaHrName: 'HR స్క్రీన్',
+    personaHrDesc: 'ప్రవర్తనా மற்றும் సాంస్కృతిక సరిపోలిక ఫోకస్',
+    personaTechnicalName: 'టెక్నికల్',
+    personaTechnicalDesc: 'డీప్ డైవ్స్, ట్రేడ్-ఆఫ్స్, మీట్రిక్స్',
+    statusConnecting: 'కనెక్ట్ అవుతుంది…',
+    statusThinking: 'ఆలోచిస్తోంది…',
+    statusYourTurn: 'ఇప్పుడు మీ తరం',
+    statusComplete: 'సెషన్ పూర్తయింది',
+    micHintDefault: 'మైక్‌లో మాట్లాడటానికి క్లిక్ చేయండి',
+    micHintSpeechNotSupported: 'ఈ బ్రౌజర్‌లో స్పీచ్‌కు మద్దతు లేదు — మీ సమాధానాన్ని టైప్ చేయండి',
+    micHintListening: 'శ్రవణం చేస్తోంది… నిలిపే కోసం మళ్ళీ క్లిక్ చేయండి',
+    reviewExport: 'సమీక్ష & ఎగుమతి',
+    endSession: 'సెషన్ ముగించండి',
+    reviewTitle: 'సెషన్ సమీక్ష',
+    close: 'మూసివేయండి',
+    exportJson: 'JSON ఎగుమతి',
+    exportTxt: 'టెక్స్ట్ ఎగుమతి',
+    apiDebug: 'API డీబగ్',
+    lastRequest: 'చివరి అభ్యర్థన:',
+    lastResponsePreview: 'చివరి ప్రతిస్పందన ప్రివ్యూ:',
+    sessionSaved: 'మునుపటి సెషన్ నుండి రెజ్యూమ్ లోడ్ చేయబడింది.',
+  }
+};
+
+const speechLocaleMap = {
+  en: 'en-IN',
+  hi: 'hi-IN',
+  te: 'te-IN',
+};
+
+function getSpeechLocale(lang) {
+  return speechLocaleMap[lang] || 'en-IN';
+}
+
+function getLanguageName(lang) {
+  return { en: 'English', hi: 'Hindi', te: 'Telugu' }[lang] || 'English';
+}
+
+function translateUI() {
+  const strings = translations[selectedLanguage];
+  document.documentElement.lang = selectedLanguage;
+  document.getElementById('app-title').textContent = strings.appTitle;
+  document.getElementById('app-heading').innerHTML = strings.heading.replace(/\n/g, '<br>');
+  document.getElementById('app-subtitle').textContent = strings.subtitle;
+  document.getElementById('job-desc-label').textContent = strings.jobLabel;
+  jobDesc.placeholder = strings.jobPlaceholder;
+  document.getElementById('resume-upload-label').textContent = strings.resumeLabel;
+  resumeHelp.textContent = strings.resumeHelp;
+  document.getElementById('language-label').textContent = strings.languageLabel;
+  document.getElementById('style-label').textContent = strings.styleLabel;
+  document.getElementById('model-select-label').textContent = strings.modelLabel;
+  document.getElementById('temp-range-label').textContent = strings.tempLabel;
+  document.getElementById('tts-label').textContent = strings.ttsLabel;
+  document.getElementById('tts-toggle').textContent = strings.ttsToggle;
+  document.getElementById('persona-friendly-name').textContent = strings.personaFriendlyName;
+  document.getElementById('persona-friendly-desc').textContent = strings.personaFriendlyDesc;
+  document.getElementById('persona-tough-name').textContent = strings.personaToughName;
+  document.getElementById('persona-tough-desc').textContent = strings.personaToughDesc;
+  document.getElementById('persona-hr-name').textContent = strings.personaHrName;
+  document.getElementById('persona-hr-desc').textContent = strings.personaHrDesc;
+  document.getElementById('persona-technical-name').textContent = strings.personaTechnicalName;
+  document.getElementById('persona-technical-desc').textContent = strings.personaTechnicalDesc;
+  const startIcon = startBtn.querySelector('svg');
+  startBtn.innerHTML = '';
+  if (startIcon) startBtn.appendChild(startIcon);
+  startBtn.append(' ' + strings.startButton);
+  themeToggle.textContent = document.documentElement.classList.contains('dark-theme') ? strings.darkMode : strings.lightMode;
+  reviewBtn.textContent = strings.reviewExport;
+  endBtn.textContent = strings.endSession;
+  debugToggle.textContent = strings.apiDebug;
+  if (!SpeechRecognition) micHint.textContent = strings.micHintSpeechNotSupported;
+  else if (!isRecording) micHint.textContent = strings.micHintDefault;
+}
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const setupScreen   = document.getElementById('setup-screen');
@@ -648,6 +840,7 @@ const interviewScreen = document.getElementById('interview-screen');
 const jobDesc       = document.getElementById('job-desc');
 const resumeUpload  = document.getElementById('resume-upload');
 const resumeHelp    = document.getElementById('resume-help');
+const languageSelect = document.getElementById('language-select');
 const startBtn      = document.getElementById('start-btn');
 const chatArea      = document.getElementById('chat-area');
 const userInput     = document.getElementById('user-input');
@@ -807,6 +1000,7 @@ function appendStreamingMessage(role) {
         if (ttsEnabled && typeof window.speechSynthesis !== 'undefined') {
           window.speechSynthesis.cancel();
           const u = new SpeechSynthesisUtterance(fullText);
+          u.lang = getSpeechLocale(selectedLanguage);
           u.rate = 1.0;
           window.speechSynthesis.speak(u);
         }
@@ -857,7 +1051,7 @@ function renderScorecard(raw) {
   userInput.disabled = true;
   sendBtn.disabled = true;
   micBtn.disabled = true;
-  statusLabel.textContent = 'Session complete';
+  statusLabel.textContent = translations[selectedLanguage].statusComplete;
   document.getElementById('status-dot').style.background = 'var(--amber)';
 }
 
@@ -913,7 +1107,7 @@ startBtn.addEventListener('click', async () => {
   startBtn.disabled = true;
   setupScreen.style.display = 'none';
   interviewScreen.style.display = 'flex';
-  statusLabel.textContent = 'Connecting…';
+  statusLabel.textContent = translations[selectedLanguage].statusConnecting;
 
   const streaming = appendStreamingMessage('assistant');
   isStreaming = true;
@@ -936,6 +1130,7 @@ startBtn.addEventListener('click', async () => {
       {
         jobDescription: jobDesc.value.trim(),
         persona: selectedPersona,
+        language: selectedLanguage,
         model: document.getElementById('model-select').value,
         temperature: parseFloat(document.getElementById('temp-range').value),
         resumeText,
@@ -949,7 +1144,7 @@ startBtn.addEventListener('click', async () => {
     try { localStorage.setItem(jobKey, JSON.stringify({ systemPrompt, history, turnCount, resumeText })); } catch (e) {}
     turnCount++;
     turnCounter.textContent = `Q ${turnCount}`;
-    statusLabel.textContent = 'Your turn';
+    statusLabel.textContent = translations[selectedLanguage].statusYourTurn;
   } catch (e) {
     streaming.setText(`Connection error: ${e.message || e}`);
   } finally {
@@ -968,7 +1163,7 @@ async function sendReply() {
   history.push({ role: 'user', content: text });
 
   isStreaming = true;
-  statusLabel.textContent = 'Thinking…';
+  statusLabel.textContent = translations[selectedLanguage].statusThinking;
 
   const streaming = appendStreamingMessage('assistant');
 
@@ -987,7 +1182,7 @@ async function sendReply() {
     } catch (e) {}
     turnCount++;
     turnCounter.textContent = `Q ${turnCount}`;
-    statusLabel.textContent = 'Your turn';
+    statusLabel.textContent = translations[selectedLanguage].statusYourTurn;
   } catch (e) {
     streaming.setText(`Something went wrong: ${e.message || e}`);
   } finally {
@@ -1026,12 +1221,12 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 
 if (!SpeechRecognition) {
   micBtn.disabled = true;
-  micHint.textContent = 'Speech not supported in this browser — type your answers';
+  micHint.textContent = translations[selectedLanguage].micHintSpeechNotSupported;
 } else {
   recognition = new SpeechRecognition();
   recognition.continuous = true;
   recognition.interimResults = true;
-  recognition.lang = 'en-US';
+  recognition.lang = getSpeechLocale(selectedLanguage);
 
   let finalTranscript = '';
   let processedFinalResults = 0;
@@ -1124,7 +1319,7 @@ if (!SpeechRecognition) {
   function stopRecording() {
     isRecording = false;
     micBtn.classList.remove('active');
-    micHint.textContent = 'Click mic to start speaking';
+    micHint.textContent = translations[selectedLanguage].micHintDefault;
     micHint.classList.remove('recording');
   }
 
@@ -1136,7 +1331,7 @@ if (!SpeechRecognition) {
       processedFinalResults = 0;
       userInput.value = '';
       micBtn.classList.add('active');
-      micHint.textContent = 'Listening… click again to stop';
+      micHint.textContent = translations[selectedLanguage].micHintListening;
       micHint.classList.add('recording');
       recognition.start();
     } else {
@@ -1153,10 +1348,15 @@ if (!SpeechRecognition) {
   const saved = JSON.parse(localStorage.getItem('interview.settings') || '{}');
   if (saved.model) modelSelect.value = saved.model;
   if (typeof saved.temperature === 'number') tempRange.value = saved.temperature;
+  if (saved.language) {
+    selectedLanguage = saved.language;
+    languageSelect.value = selectedLanguage;
+  }
   if (saved.resumeText) {
     resumeText = saved.resumeText;
-    resumeHelp.textContent = 'Resume loaded from previous session.';
+    resumeHelp.textContent = translations[selectedLanguage].sessionSaved;
   }
+  translateUI();
   tempValue.textContent = parseFloat(tempRange.value).toFixed(2);
 
   modelSelect.addEventListener('change', () => {
