@@ -27,6 +27,12 @@
 - [x] Validation for missing input
 - [x] Proper error messages for API failures
 - [x] Minimal external dependencies
+- [x] Dependency audit (bun audit with pre-commit hook)
+- [x] Linting (ESLint, Prettier, Biome, Oxlint)
+- [x] Type checking (TypeScript with zero-config)
+- [x] Secret scanning (Gitleaks)
+- [x] Dead code detection (Knip)
+- [x] Pre-commit hooks with Husky
 
 ## Documentation
 
