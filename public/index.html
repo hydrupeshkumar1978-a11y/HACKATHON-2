@@ -1036,6 +1036,61 @@ if (!SpeechRecognition) {
   let finalTranscript = '';
   let processedFinalResults = 0;
 
+  function normalizeSpeechText(text) {
+    return text.replace(/\s+/g, ' ').trim();
+  }
+
+  function wordsMatch(a, b) {
+    return a.toLowerCase().replace(/[^\w']/g, '') === b.toLowerCase().replace(/[^\w']/g, '');
+  }
+
+  function mergeTranscript(base, addition) {
+    const current = normalizeSpeechText(base);
+    const next = normalizeSpeechText(addition);
+    if (!next) return current;
+    if (!current) return next;
+
+    const currentWords = current.split(' ');
+    const nextWords = next.split(' ');
+    let overlap = 0;
+    const maxOverlap = Math.min(currentWords.length, nextWords.length);
+
+    for (let size = 1; size <= maxOverlap; size++) {
+      const currentTail = currentWords.slice(-size);
+      const nextHead = nextWords.slice(0, size);
+      if (currentTail.every((word, index) => wordsMatch(word, nextHead[index]))) {
+        overlap = size;
+      }
+    }
+
+    if (overlap === nextWords.length) return current;
+    return normalizeSpeechText(`${current} ${nextWords.slice(overlap).join(' ')}`);
+  }
+
+  function collapseRepeatedSpeech(text) {
+    const words = normalizeSpeechText(text).split(' ').filter(Boolean);
+    const output = [];
+
+    for (const word of words) {
+      output.push(word);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (let size = Math.min(6, Math.floor(output.length / 2)); size >= 1; size--) {
+          const first = output.slice(output.length - size * 2, output.length - size);
+          const second = output.slice(output.length - size);
+          if (first.every((item, index) => wordsMatch(item, second[index]))) {
+            output.splice(output.length - size, size);
+            changed = true;
+            break;
+          }
+        }
+      }
+    }
+
+    return output.join(' ');
+  }
+
   recognition.onresult = e => {
     let interimTranscript = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -1043,14 +1098,14 @@ if (!SpeechRecognition) {
       if (!transcript) continue;
       if (e.results[i].isFinal) {
         if (i >= processedFinalResults) {
-          finalTranscript = `${finalTranscript} ${transcript}`.trim();
+          finalTranscript = collapseRepeatedSpeech(mergeTranscript(finalTranscript, transcript));
           processedFinalResults = i + 1;
         }
       } else {
-        interimTranscript = `${interimTranscript} ${transcript}`.trim();
+        interimTranscript = mergeTranscript(interimTranscript, transcript);
       }
     }
-    userInput.value = `${finalTranscript} ${interimTranscript}`.trim();
+    userInput.value = collapseRepeatedSpeech(mergeTranscript(finalTranscript, interimTranscript));
     userInput.style.height = 'auto';
     userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
   };
