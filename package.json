@@ -32,7 +32,9 @@
     "audit": "bun audit",
     "secret-scan": "sh -c 'if command -v gitleaks >/dev/null 2>&1; then gitleaks protect --staged --source .; else echo \"gitleaks not installed; skipping secret scan\"; fi'",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "changelog": "git-cliff --output CHANGELOG.md",
+    "changelog:preview": "git-cliff --unreleased"
   },
   "dependencies": {
     "groq-sdk": "^0.8.0",
