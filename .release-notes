@@ -1,0 +1,97 @@
+# Release Notes Template
+
+## Release: v1.0.1 (Quality & Development Process)
+
+**Release Date:** June 11, 2026
+
+### Highlights
+- ✅ Automated changelog generation with Git-Cliff
+- ✅ Comprehensive dependency auditing
+- ✅ Quality assurance tooling standardization
+- ✅ Enhanced git hooks and pre-commit automation
+- ✅ Complete metadata and documentation structure
+
+### What's New
+
+#### Quality & Automation
+- **Git-Cliff Integration:** Automated changelog generation from conventional commits
+- **Dependency Audit:** `bun audit` integration in pre-commit hooks (non-blocking)
+- **Quality Script:** `bun run quality` runs all quality checks at once
+- **Enhanced Pre-commit:** TypeScript, linting, secret scanning, and audit all run automatically
+
+#### Documentation
+- **Metadata Documentation:** Complete project metadata in `docs/metadata.md`
+- **Quality Checklist:** Comprehensive quality assurance checklist
+- **Git-Cliff Guide:** Setup and usage instructions for changelog automation
+- **CHANGELOG:** Detailed changelog with version history and contribution guidelines
+
+### Installation & Upgrade
+
+```bash
+# Pull latest changes
+git pull
+
+# Install dependencies (if updated)
+bun install
+
+# Verify quality checks pass
+bun run quality
+
+# Start development
+bun dev
+```
+
+### Key Files Updated
+- `cliff.toml` — Git-Cliff configuration
+- `package.json` — New scripts for audit and quality checks
+- `.husky/pre-commit` — Enhanced hook with audit
+- `CHANGELOG.md` — Comprehensive changelog
+- `docs/metadata.md` — Project metadata
+- `docs/quality-checklist.md` — Quality assurance guide
+- `tasks/mvp-checklist.md` — Updated MVP status
+
+### Breaking Changes
+None
+
+### Deprecations
+None
+
+### Known Issues
+- 5 dev dependency vulnerabilities in ESLint ecosystem (minimatch, yaml, micromatch)
+  - Fix with: `bun audit:fix` or `bun update`
+  - Status: Non-production, development only
+
+### Migration Guide
+No migration needed. All changes are backward compatible.
+
+### Testing
+- All quality checks passing: ✅
+- Type checking: ✅
+- Linting: ✅
+- Secrets scan: ✅
+- Dependency audit: ⚠️ 5 warnings (dev deps only)
+
+### Deployment
+No additional deployment steps required. All changes are development/documentation related.
+
+### Support
+- Documentation: [docs/](docs/)
+- Quality Info: [docs/quality-checklist.md](docs/quality-checklist.md)
+- Metadata: [docs/metadata.md](docs/metadata.md)
+- Troubleshooting: [docs/troubleshooting.md](docs/troubleshooting.md)
+
+### Contributors
+- Rupesh Kumar
+
+---
+
+## Version History Quick Links
+
+- [v1.0.1](https://code.swecha.org/hydrupeshkumar/hackathon-2/-/tags/v1.0.1) — Quality & Release Process
+- [v1.0.0](https://code.swecha.org/hydrupeshkumar/hackathon-2/-/tags/v1.0.0) — Initial MVP Release
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for full change history.
