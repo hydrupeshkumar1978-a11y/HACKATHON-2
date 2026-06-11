@@ -30,9 +30,11 @@
     "oxlint": "oxlint .",
     "knip": "knip",
     "audit": "bun audit",
+    "audit:fix": "bun audit --fix",
     "secret-scan": "sh -c 'if command -v gitleaks >/dev/null 2>&1; then gitleaks protect --staged --source .; else echo \"gitleaks not installed; skipping secret scan\"; fi'",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
+    "quality": "bun run lint && bun run format && bun run biome && bun run oxlint && bun run knip && bun run typecheck && bun run audit",
     "changelog": "git-cliff --output CHANGELOG.md",
     "changelog:preview": "git-cliff --unreleased"
   },

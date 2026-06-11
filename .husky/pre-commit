@@ -4,3 +4,5 @@
 npx lint-staged
 bun run typecheck
 bun run secret-scan
+# Run audit but don't block commit (shows warnings only)
+bun run audit || true
