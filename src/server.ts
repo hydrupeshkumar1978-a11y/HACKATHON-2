@@ -67,32 +67,18 @@ async function extractTextFromResume(fileBuffer: ArrayBuffer, fileName: string):
 }
 
 // ── System prompt builder ─────────────────────────────────────────────────
-function buildSystemPrompt(
-  jobDescription: string,
-  persona: string,
-  resumeText?: string,
-  language = 'en'
-): string {
+function buildSystemPrompt(jobDescription: string, persona: string, resumeText?: string): string {
   const personas: Record<string, string> = {
     friendly:
       'You are a warm, encouraging interviewer. You ask follow-up questions, smile through text, and create a supportive atmosphere — but still probe for real depth.',
     tough:
       "You are a no-nonsense senior engineering interviewer at a top-tier company. You push back on vague answers, ask 'why?', and don't let candidates off the hook. Direct, demanding, fair.",
-    hr: "You are an HR generalist conducting a behavioural screen. You focus on culture fit, communication style, and STAR-method answers. You use phrases like 'Tell me about a time when...'.",
+    hr: "You are an HR generalist conducting a behavioural screen. You focus on culture fit, communication style, and STAR-method answers. You use phrases like 'Tell me about a time when...'",
     technical:
       'You are a principal engineer conducting a deep technical interview. You dive into system design, trade-offs, and past technical decisions. You ask for specific examples, metrics, and lessons learned.',
   };
 
-  const languageNames: Record<string, string> = {
-    en: 'English',
-    hi: 'Hindi',
-    te: 'Telugu',
-  };
-  const targetLanguage = languageNames[language] || 'English';
-
   return `${personas[persona] || personas.friendly}
-
-Conduct the interview in ${targetLanguage}. Use the job description and resume text exactly as provided. If the resume is in ${targetLanguage}, do not translate it—use it as the candidate's source experience.
 
 ${resumeText ? `The candidate's resume summary is below:\n---\n${resumeText}\n---\n` : ''}
 You are interviewing a candidate for the following role:
@@ -117,30 +103,17 @@ async function handleStartInterview(req: Request): Promise<Response> {
     const body = (await req.json()) as {
       jobDescription: string;
       persona: string;
-      language?: string;
       model?: string;
       temperature?: number;
       resumeText?: string;
     };
-    const {
-      jobDescription,
-      persona,
-      language,
-      model: requestedModel,
-      temperature,
-      resumeText,
-    } = body;
+    const { jobDescription, persona, model: requestedModel, temperature, resumeText } = body;
 
     if (!jobDescription?.trim()) {
       return Response.json({ error: 'Job description is required' }, { status: 400 });
     }
 
-    const systemPrompt = buildSystemPrompt(
-      jobDescription,
-      persona || 'friendly',
-      resumeText,
-      language || 'en'
-    );
+    const systemPrompt = buildSystemPrompt(jobDescription, persona || 'friendly', resumeText);
 
     const model = requestedModel || 'groq/compound-mini';
 

@@ -78,7 +78,6 @@ When building the system prompt, include:
 - The selected persona instructions.
 - The job description.
 - Optional resume text if available.
-- Interview language selection for English, Hindi, or Telugu.
 - Clear rules for question cadence and format.
 - The requirement to use `<scorecard>` tags for the final summary.
 
@@ -117,7 +116,6 @@ The candidate's resume summary is below:
 - This skill is aligned with the app implementation in `src/server.ts`.
 - The frontend persona labels are defined in `public/index.html`.
 - The app uses SSE streaming for live responses and relies on the model following these strict messaging rules.
-- The interview language should be respected by the model, including resume text in the selected language.
 
 ## Notes for developers
 

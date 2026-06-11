@@ -41,9 +41,9 @@ The agent must:
 
 ## App-specific prompt rules
 
-- The client sends `{ jobDescription, persona, language, resumeText? }` to `/api/start`.
-- The server builds the system prompt from the selected persona, job description, and interview language.
-- If resume text is provided, include it in the prompt before the job description. The resume may also be in the selected language.
+- The client sends `{ jobDescription, persona, resumeText? }` to `/api/start`.
+- The server builds the system prompt from the selected persona and job description.
+- If resume text is provided, include it in the prompt before the job description.
 - Never ask two questions in one message.
 - Keep channel behavior consistent: one reaction sentence + next question.
 - Final scorecard should look like:
