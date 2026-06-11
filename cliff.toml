@@ -2,6 +2,9 @@
 # Generates automated changelogs from conventional commits
 
 [changelog]
+# Project information
+title = "Changelog"
+description = "A browser-based interview simulator with AI-driven Q&A, resume uploads, and transcript export."
 # changelog header
 header = """
 # Changelog
@@ -69,3 +72,8 @@ trim_commits = [
     { pattern = "^Merge", text = "" },
     { pattern = "^Revert", text = "" },
 ]
+
+[remote.github]
+owner = "hydrupeshkumar"
+repo = "hackathon-2"
+
