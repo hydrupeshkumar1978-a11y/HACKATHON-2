@@ -1,0 +1,34 @@
+A browser-based interview simulator with AI-driven Q&A, resume uploads, and transcript export.
+
+## Features
+
+- **Real-time AI Interviews:** Practice with AI-powered interviewers using Groq API
+- **Multiple Personas:** Choose from friendly, tough, HR, or technical interviewer styles
+- **Speech Recognition:** Interview using your voice with Web Speech API
+- **Resume Upload:** Support for PDF, DOCX, and TXT resume formats
+- **Live Streaming:** See AI responses stream in real-time via SSE
+- **Scorecard Generation:** Get instant feedback and scoring after each interview
+- **Transcript Export:** Review and download your full interview transcript
+- **Dark Mode:** Comfortable UI with light and dark theme options
+
+## Quick Start
+
+```bash
+bun install
+export GROQ_API_KEY=gsk-...
+bun dev
+```
+
+Visit `http://localhost:3000` to start practicing interviews.
+
+## Technology
+
+- **Frontend:** Vanilla JavaScript SPA with Web Speech API
+- **Backend:** Bun runtime with TypeScript
+- **AI:** Groq API (groq/compound-mini)
+- **Streaming:** Server-Sent Events (SSE)
+- **Quality:** TypeScript, ESLint, Prettier, Biome, Vitest
+
+## License
+
+AGPL-3.0-or-later
