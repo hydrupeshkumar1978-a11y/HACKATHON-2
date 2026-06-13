@@ -527,69 +527,94 @@
   <div>
     <div class="logo-row">
       <div class="logo-dot"></div>
-      <span class="logo-text">Interview Simulator</span>
+      <span class="logo-text" id="logo-text">Interview Simulator</span>
     </div>
-    <h1>Practice like it's<br>the <em>real thing</em>.</h1>
+    <h1 id="main-heading">Practice like it's<br>the <em>real thing</em>.</h1>
   </div>
-  <p class="subtitle">Paste a job description, pick your interviewer style, and get live AI feedback on every answer — spoken or typed.</p>
+  <p class="subtitle" id="main-subtitle">Paste a job description, pick your interviewer style, and get live AI feedback on every answer — spoken or typed.</p>
 
   <div class="field">
-    <label>Job description</label>
+    <label id="job-desc-label">Job description</label>
     <textarea id="job-desc" placeholder="Paste the job listing here — title, responsibilities, requirements. The more detail, the more tailored the questions."></textarea>
   </div>
 
   <div class="field">
-    <label for="resume-upload">Upload resume</label>
+    <label id="resume-label" for="resume-upload">Upload resume</label>
     <input id="resume-upload" type="file" accept=".pdf,.docx,.txt" />
     <div id="resume-help" class="resume-help">Upload a PDF, DOCX, or TXT resume to include your experience in the interview prompt.</div>
   </div>
 
   <div class="field">
-    <label>Interviewer style</label>
+    <label id="persona-label">Interviewer style</label>
     <div class="persona-grid">
       <button class="persona-btn selected" data-persona="friendly">
-        <span class="persona-name">Friendly</span>
-        <span class="persona-desc">Warm, encouraging, still probing</span>
+        <span id="persona-friendly-name" class="persona-name">Friendly</span>
+        <span id="persona-friendly-desc" class="persona-desc">Warm, encouraging, still probing</span>
       </button>
       <button class="persona-btn" data-persona="tough">
-        <span class="persona-name">Tough</span>
-        <span class="persona-desc">Senior engineer, no fluff tolerated</span>
+        <span id="persona-tough-name" class="persona-name">Tough</span>
+        <span id="persona-tough-desc" class="persona-desc">Senior engineer, no fluff tolerated</span>
       </button>
       <button class="persona-btn" data-persona="hr">
-        <span class="persona-name">HR Screen</span>
-        <span class="persona-desc">Behavioural & culture-fit focus</span>
+        <span id="persona-hr-name" class="persona-name">HR Screen</span>
+        <span id="persona-hr-desc" class="persona-desc">Behavioural & culture-fit focus</span>
       </button>
       <button class="persona-btn" data-persona="technical">
-        <span class="persona-name">Technical</span>
-        <span class="persona-desc">Deep dives, trade-offs, metrics</span>
+        <span id="persona-technical-name" class="persona-name">Technical</span>
+        <span id="persona-technical-desc" class="persona-desc">Deep dives, trade-offs, metrics</span>
       </button>
     </div>
   </div>
 
   <div class="field">
-    <label for="model-select">Model</label>
+    <label id="model-label" for="model-select">Model</label>
     <select id="model-select">
-      <option value="groq/compound-mini">groq/compound-mini (default)</option>
-      <option value="groq/compound">groq/compound</option>
+<option value="groq/compound-mini" data-providers="groq">groq/compound-mini (default)</option>
+    <option value="groq/compound" data-providers="groq">groq/compound</option>
+    <option value="llama2" data-providers="ollama">llama2 (local)</option>
+    <option value="llama2-mini" data-providers="ollama">llama2-mini (local)</option>
     </select>
   </div>
 
   <div class="field">
-    <label for="temp-range">Temperature</label>
+    <label id="provider-label" for="provider-select">Provider</label>
+    <select id="provider-select">
+      <option value="groq">Groq (remote)</option>
+      <option value="ollama">Ollama (local)</option>
+    </select>
+  </div>
+
+  <div class="field" style="display:flex;gap:8px;align-items:center;">
+    <label id="use-key-label" style="margin:0">Use my API key</label>
+    <input id="use-my-key" type="checkbox" />
+    <input id="api-key" type="password" placeholder="Enter API key (optional)" style="flex:1;display:none" />
+  </div>
+
+  <div class="field">
+    <label id="language-label" for="language-select">Language</label>
+    <select id="language-select">
+      <option value="en" selected>English</option>
+      <option value="hi">हिन्दी (Hindi)</option>
+      <option value="te">తెలుగు (Telugu)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label id="temperature-label" for="temp-range">Temperature</label>
     <input id="temp-range" type="range" min="0" max="1" step="0.05" value="0.0">
     <div style="margin-top:6px;color:var(--muted);font-size:13px">Value: <span id="temp-value">0.0</span></div>
   </div>
 
   <div class="field">
-    <label for="enable-tts">Text-to-Speech</label>
-    <label style="display:flex;align-items:center;gap:8px"><input id="enable-tts" type="checkbox"> Enable assistant speech playback</label>
+    <label id="tts-label" for="enable-tts">Text-to-Speech</label>
+    <label style="display:flex;align-items:center;gap:8px"><input id="enable-tts" type="checkbox"> <span id="tts-label-text">Enable assistant speech playback</span></label>
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
     <button class="theme-toggle" id="theme-toggle" type="button">Light mode</button>
     <button class="start-btn" id="start-btn" disabled>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Start interview
+      <span id="start-btn-text">Start interview</span>
     </button>
   </div>
 </div>
@@ -663,6 +688,32 @@ const debugToggle    = document.getElementById('debug-toggle');
 const debugPanel     = document.getElementById('debug-panel');
 const debugReq       = document.getElementById('debug-request');
 const debugRes       = document.getElementById('debug-response');
+const providerSelect = document.getElementById('provider-select');
+const modelSelect = document.getElementById('model-select');
+const useMyKeyCheck = document.getElementById('use-my-key');
+const apiKeyInput = document.getElementById('api-key');
+const languageSelect = document.getElementById('language-select');
+const logoText = document.getElementById('logo-text');
+const mainHeading = document.getElementById('main-heading');
+const mainSubtitle = document.getElementById('main-subtitle');
+const jobDescLabel = document.getElementById('job-desc-label');
+const resumeLabel = document.getElementById('resume-label');
+const personaLabel = document.getElementById('persona-label');
+const personaFriendlyName = document.getElementById('persona-friendly-name');
+const personaFriendlyDesc = document.getElementById('persona-friendly-desc');
+const personaToughName = document.getElementById('persona-tough-name');
+const personaToughDesc = document.getElementById('persona-tough-desc');
+const personaHRName = document.getElementById('persona-hr-name');
+const personaHRDesc = document.getElementById('persona-hr-desc');
+const personaTechnicalName = document.getElementById('persona-technical-name');
+const personaTechnicalDesc = document.getElementById('persona-technical-desc');
+const modelLabel = document.getElementById('model-label');
+const providerLabel = document.getElementById('provider-label');
+const useKeyLabel = document.getElementById('use-key-label');
+const languageLabel = document.getElementById('language-label');
+const temperatureLabel = document.getElementById('temperature-label');
+const ttsLabel = document.getElementById('tts-label');
+const ttsLabelText = document.getElementById('tts-label-text');
 
 // ── Setup interactions ────────────────────────────────────────────────────
 jobDesc.addEventListener('input', () => {
@@ -714,13 +765,80 @@ userInput.addEventListener('input', () => {
   userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
 });
 
-userInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
-});
+if (useMyKeyCheck) {
+  useMyKeyCheck.addEventListener('change', () => {
+    if (apiKeyInput) apiKeyInput.style.display = useMyKeyCheck.checked ? 'block' : 'none';
+    try {
+      const saved = JSON.parse(localStorage.getItem('interview.settings') || '{}');
+      saved.useMyKey = useMyKeyCheck.checked;
+      localStorage.setItem('interview.settings', JSON.stringify(saved));
+    } catch (e) {}
+  });
+}
+
+let locales = {};
+
+function applyLocale(lang) {
+  const locale = locales[lang] || locales.en || {};
+  document.title = locale.title || document.title;
+  if (logoText) logoText.textContent = locale.title || logoText.textContent;
+  if (mainHeading) mainHeading.innerHTML = locale.mainHeading || `Practice like it's<br>the <em>real thing</em>.`;
+  if (mainSubtitle) mainSubtitle.textContent = locale.subtitle || mainSubtitle.textContent;
+  if (jobDescLabel) jobDescLabel.textContent = locale.jobDescription || jobDescLabel.textContent;
+  if (resumeLabel) resumeLabel.textContent = locale.uploadResume || resumeLabel.textContent;
+  if (personaFriendlyName) personaFriendlyName.textContent = locale.personaFriendly || personaFriendlyName.textContent;
+  if (personaFriendlyDesc) personaFriendlyDesc.textContent = locale.personaFriendlyDesc || personaFriendlyDesc.textContent;
+  if (personaToughName) personaToughName.textContent = locale.personaTough || personaToughName.textContent;
+  if (personaToughDesc) personaToughDesc.textContent = locale.personaToughDesc || personaToughDesc.textContent;
+  if (personaHRName) personaHRName.textContent = locale.personaHR || personaHRName.textContent;
+  if (personaHRDesc) personaHRDesc.textContent = locale.personaHRDesc || personaHRDesc.textContent;
+  if (personaTechnicalName) personaTechnicalName.textContent = locale.personaTechnical || personaTechnicalName.textContent;
+  if (personaTechnicalDesc) personaTechnicalDesc.textContent = locale.personaTechnicalDesc || personaTechnicalDesc.textContent;
+  if (personaLabel) personaLabel.textContent = locale.persona || personaLabel.textContent;
+  if (modelLabel) modelLabel.textContent = locale.model || modelLabel.textContent;
+  if (providerLabel) providerLabel.textContent = locale.provider || providerLabel.textContent;
+  if (useKeyLabel) useKeyLabel.textContent = locale.useMyKey || useKeyLabel.textContent;
+  if (languageLabel) languageLabel.textContent = locale.language || languageLabel.textContent;
+  if (temperatureLabel) temperatureLabel.textContent = locale.temperature || temperatureLabel.textContent;
+  if (ttsLabel) ttsLabel.textContent = locale.tts || ttsLabel.textContent;
+  if (ttsLabelText) ttsLabelText.textContent = locale.tts || ttsLabelText.textContent;
+  if (jobDesc) jobDesc.placeholder = locale.jobDescriptionPlaceholder || jobDesc.placeholder;
+  if (resumeHelp) resumeHelp.textContent = locale.uploadResumeNote || resumeHelp.textContent;
+  if (startBtnText) startBtnText.textContent = locale.start || startBtnText.textContent;
+  if (userInput) userInput.placeholder = locale.typeAnswerPlaceholder || userInput.placeholder;
+  if (micHint) micHint.textContent = locale.micHintReady || micHint.textContent;
+  if (languageSelect) languageSelect.value = lang;
+  if (providerSelect) {
+    const groqOption = providerSelect.querySelector('option[value="groq"]');
+    const ollamaOption = providerSelect.querySelector('option[value="ollama"]');
+    if (groqOption) groqOption.textContent = locale.groq || groqOption.textContent;
+    if (ollamaOption) ollamaOption.textContent = locale.ollama || ollamaOption.textContent;
+  }
+  if (themeToggle) themeToggle.textContent = (document.documentElement.classList.contains('dark-theme') ? locale.themeDark : locale.themeLight) || themeToggle.textContent;
+  if (statusLabel) {
+    const current = statusLabel.textContent;
+    if (current === 'Connecting…' || current === 'कनेक्ट हो रहा है…' || current === 'కనెక్ట్ అవుతున్నాం…') statusLabel.textContent = locale.statusConnecting || current;
+    if (current === 'Your turn' || current === 'आपकी बारी है' || current === 'మీ మలుపు') statusLabel.textContent = locale.statusYourTurn || current;
+    if (current === 'Session complete' || current === 'सत्र पूरा हुआ' || current === 'సెషన్ పూర్తయింది') statusLabel.textContent = locale.statusSessionComplete || current;
+  }
+}
+
+async function loadLocales() {
+  try {
+    const res = await fetch('/locales.json');
+    if (!res.ok) throw new Error('Unable to load locales');
+    locales = await res.json();
+    const lang = (languageSelect && languageSelect.value) || 'en';
+    applyLocale(lang);
+  } catch (error) {
+    console.warn('Locale load failed:', error);
+  }
+}
 
 function applyPreferredTheme(theme) {
   document.documentElement.classList.toggle('dark-theme', theme === 'dark');
-  themeToggle.textContent = theme === 'dark' ? 'Dark mode' : 'Light mode';
+  const locale = locales[(languageSelect && languageSelect.value) || 'en'] || {};
+  themeToggle.textContent = theme === 'dark' ? locale.themeDark || 'Dark mode' : locale.themeLight || 'Light mode';
   localStorage.setItem('interview.theme', theme);
 }
 
@@ -735,6 +853,31 @@ themeToggle.addEventListener('click', () => {
   const current = document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light';
   applyPreferredTheme(current === 'dark' ? 'light' : 'dark');
 });
+
+function updateModelOptions() {
+  if (!providerSelect || !modelSelect) return;
+  const options = Array.from(modelSelect.options);
+  const provider = providerSelect.value;
+  options.forEach((opt) => {
+    const providers = (opt.dataset.providers || '').split(',').map((value) => value.trim());
+    opt.hidden = !providers.includes(provider);
+  });
+  if (modelSelect.selectedOptions[0]?.hidden) {
+    const firstVisible = options.find((opt) => !opt.hidden);
+    if (firstVisible) modelSelect.value = firstVisible.value;
+  }
+}
+
+if (providerSelect) {
+  providerSelect.addEventListener('change', () => {
+    updateModelOptions();
+    try {
+      const saved = JSON.parse(localStorage.getItem('interview.settings') || '{}');
+      saved.provider = providerSelect.value;
+      localStorage.setItem('interview.settings', JSON.stringify(saved));
+    } catch (e) {}
+  });
+}
 
 // ── Chat helpers ──────────────────────────────────────────────────────────
 function appendMessage(role, text) {
@@ -937,7 +1080,10 @@ startBtn.addEventListener('click', async () => {
         jobDescription: jobDesc.value.trim(),
         persona: selectedPersona,
         model: document.getElementById('model-select').value,
+        provider: (document.getElementById('provider-select') || {}).value || undefined,
+        apiKey: (document.getElementById('use-my-key') && document.getElementById('use-my-key').checked) ? (document.getElementById('api-key') || {}).value : undefined,
         temperature: parseFloat(document.getElementById('temp-range').value),
+        language: (document.getElementById('language-select') || {}).value || 'en',
         resumeText,
       },
       text => streaming.setText(text),
@@ -975,7 +1121,16 @@ async function sendReply() {
   try {
     const fullText = await streamSSE(
       '/api/reply',
-      { systemPrompt, history, userMessage: text, model: document.getElementById('model-select').value, temperature: parseFloat(document.getElementById('temp-range').value) },
+      {
+        systemPrompt,
+        history,
+        userMessage: text,
+        model: document.getElementById('model-select').value,
+        temperature: parseFloat(document.getElementById('temp-range').value),
+        provider: (document.getElementById('provider-select') || {}).value || undefined,
+        apiKey: (document.getElementById('use-my-key') && document.getElementById('use-my-key').checked) ? (document.getElementById('api-key') || {}).value : undefined,
+        language: (document.getElementById('language-select') || {}).value || 'en'
+      },
       t => streaming.setText(t)
     );
 
@@ -1124,7 +1279,8 @@ if (!SpeechRecognition) {
   function stopRecording() {
     isRecording = false;
     micBtn.classList.remove('active');
-    micHint.textContent = 'Click mic to start speaking';
+    const locale = locales[(languageSelect && languageSelect.value) || 'en'] || {};
+    micHint.textContent = locale.micHintReady || 'Click mic to start speaking';
     micHint.classList.remove('recording');
   }
 
@@ -1136,7 +1292,8 @@ if (!SpeechRecognition) {
       processedFinalResults = 0;
       userInput.value = '';
       micBtn.classList.add('active');
-      micHint.textContent = 'Listening… click again to stop';
+      const locale = locales[(languageSelect && languageSelect.value) || 'en'] || {};
+      micHint.textContent = locale.micHintListening || 'Listening… click again to stop';
       micHint.classList.add('recording');
       recognition.start();
     } else {
@@ -1151,12 +1308,23 @@ if (!SpeechRecognition) {
   const tempRange = document.getElementById('temp-range');
   const tempValue = document.getElementById('temp-value');
   const saved = JSON.parse(localStorage.getItem('interview.settings') || '{}');
+  const providerSelect = document.getElementById('provider-select');
+  const useMyKeyCheck = document.getElementById('use-my-key');
+  const apiKeyInput = document.getElementById('api-key');
+  const languageSelect = document.getElementById('language-select');
   if (saved.model) modelSelect.value = saved.model;
   if (typeof saved.temperature === 'number') tempRange.value = saved.temperature;
   if (saved.resumeText) {
     resumeText = saved.resumeText;
     resumeHelp.textContent = 'Resume loaded from previous session.';
   }
+  if (saved.provider && providerSelect) providerSelect.value = saved.provider;
+  if (saved.model && modelSelect) modelSelect.value = saved.model;
+  if (typeof saved.useMyKey === 'boolean' && useMyKeyCheck) useMyKeyCheck.checked = saved.useMyKey;
+  if (saved.apiKey && apiKeyInput) apiKeyInput.value = saved.apiKey;
+  if (saved.language && languageSelect) languageSelect.value = saved.language;
+  if (apiKeyInput && useMyKeyCheck) apiKeyInput.style.display = useMyKeyCheck.checked ? 'block' : 'none';
+  updateModelOptions();
   tempValue.textContent = parseFloat(tempRange.value).toFixed(2);
 
   modelSelect.addEventListener('change', () => {
@@ -1168,6 +1336,9 @@ if (!SpeechRecognition) {
     saved.temperature = parseFloat(tempRange.value);
     localStorage.setItem('interview.settings', JSON.stringify(saved));
   });
+  if (providerSelect) providerSelect.addEventListener('change', () => { saved.provider = providerSelect.value; localStorage.setItem('interview.settings', JSON.stringify(saved)); });
+  if (languageSelect) languageSelect.addEventListener('change', () => { saved.language = languageSelect.value; localStorage.setItem('interview.settings', JSON.stringify(saved)); applyLocale(languageSelect.value); });
+  if (apiKeyInput) apiKeyInput.addEventListener('input', () => { saved.apiKey = apiKeyInput.value; localStorage.setItem('interview.settings', JSON.stringify(saved)); });
 
   // Save session after each completed assistant reply
   const origPush = history.push;
@@ -1187,6 +1358,8 @@ if (!SpeechRecognition) {
     // populate messages in UI lazily when interview screen opens
   }
 })();
+
+loadLocales();
 
 // ── Review / Export modal ─────────────────────────────────────────────────
 (function reviewExport() {

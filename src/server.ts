@@ -4,9 +4,12 @@ import path from 'path';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 
+const defaultGroqKey = process.env.GROQ_API_KEY;
 const client = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: defaultGroqKey,
 });
+
+const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 
 const PORT = process.env.PORT || 3000;
 
@@ -66,6 +69,14 @@ async function extractTextFromResume(fileBuffer: ArrayBuffer, fileName: string):
   throw new Error('Resume format not supported. Please upload PDF, DOCX, or TXT.');
 }
 
+function normalizeModelByProvider(requestedModel: string | undefined, provider: string): string {
+  const candidate = String(requestedModel || '').trim();
+  if (provider === 'ollama') {
+    return /^ *(llama|alpaca|vicuna|wizard)/i.test(candidate) ? candidate : 'llama2';
+  }
+  return candidate.startsWith('groq/') ? candidate || 'groq/compound-mini' : 'groq/compound-mini';
+}
+
 // ── System prompt builder ─────────────────────────────────────────────────
 function buildSystemPrompt(jobDescription: string, persona: string, resumeText?: string): string {
   const personas: Record<string, string> = {
@@ -104,29 +115,71 @@ async function handleStartInterview(req: Request): Promise<Response> {
       jobDescription: string;
       persona: string;
       model?: string;
+      provider?: 'groq' | 'ollama' | string;
+      apiKey?: string; // BYOK support
       temperature?: number;
       resumeText?: string;
     };
-    const { jobDescription, persona, model: requestedModel, temperature, resumeText } = body;
+    const {
+      jobDescription,
+      persona,
+      model: requestedModel,
+      provider,
+      apiKey,
+      temperature,
+      resumeText,
+    } = body;
 
     if (!jobDescription?.trim()) {
       return Response.json({ error: 'Job description is required' }, { status: 400 });
     }
 
-    const systemPrompt = buildSystemPrompt(jobDescription, persona || 'friendly', resumeText);
+    const systemPromptBase = buildSystemPrompt(jobDescription, persona || 'friendly', resumeText);
+    const lang = (body as any).language || 'en';
+    const langInstruction =
+      lang === 'hi'
+        ? '\n\nPlease respond in Hindi.'
+        : lang === 'te'
+          ? '\n\nPlease respond in Telugu.'
+          : '';
+    const systemPrompt = systemPromptBase + langInstruction;
 
-    const model = requestedModel || 'groq/compound-mini';
+    const chosenProvider =
+      provider || (String(requestedModel).toLowerCase().includes('ollama') ? 'ollama' : 'groq');
+    const model = normalizeModelByProvider(requestedModel, chosenProvider);
 
-    const stream = await client.chat.completions.create({
-      model,
-      max_tokens: 400,
-      temperature: typeof temperature === 'number' ? temperature : undefined,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Begin the interview.' },
-      ],
-      stream: true,
-    });
+    // If API key provided in the request (BYOK), use it for Groq
+    const effectiveClient = apiKey ? new Groq({ apiKey }) : client;
+
+    let stream: AsyncIterable<any>;
+
+    if (chosenProvider === 'ollama') {
+      // Ollama local inference: build a single prompt and call local Ollama HTTP API
+      const prompt = `${systemPrompt}\n\nBegin the interview.`;
+      const resp = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, prompt, temperature, stream: false }),
+      });
+      if (!resp.ok) throw new Error(`Ollama error: ${resp.statusText}`);
+      // Parse Ollama's response - it returns a single JSON object with 'response' field
+      const data = await resp.json();
+      const text = data.response || '';
+      stream = (async function* () {
+        yield { choices: [{ delta: { content: text } }] } as any;
+      })();
+    } else {
+      stream = await effectiveClient.chat.completions.create({
+        model,
+        max_tokens: 400,
+        temperature: typeof temperature === 'number' ? temperature : undefined,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: 'Begin the interview.' },
+        ],
+        stream: true,
+      });
+    }
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
@@ -172,22 +225,61 @@ async function handleReply(req: Request): Promise<Response> {
       history: { role: 'user' | 'assistant'; content: string }[];
       userMessage: string;
       model?: string;
+      provider?: 'groq' | 'ollama' | string;
+      apiKey?: string; // BYOK support
       temperature?: number;
     };
 
-    const { systemPrompt, history, userMessage, model: requestedModel, temperature } = body;
+    const {
+      systemPrompt,
+      history,
+      userMessage,
+      model: requestedModel,
+      provider,
+      apiKey,
+      temperature,
+    } = body;
+
+    const lang = (body as any).language || 'en';
 
     const messages = [...history, { role: 'user' as const, content: userMessage }];
 
-    const model = requestedModel || 'groq/compound-mini';
+    const chosenProvider =
+      provider || (String(requestedModel).toLowerCase().includes('ollama') ? 'ollama' : 'groq');
+    const model = normalizeModelByProvider(requestedModel, chosenProvider);
+    const effectiveClient = apiKey ? new Groq({ apiKey }) : client;
 
-    const stream = await client.chat.completions.create({
-      model,
-      max_tokens: 400,
-      temperature: typeof temperature === 'number' ? temperature : undefined,
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-      stream: true,
-    });
+    let stream: AsyncIterable<any>;
+
+    if (chosenProvider === 'ollama') {
+      const langInstruction =
+        lang === 'hi'
+          ? '\n\nPlease respond in Hindi.'
+          : lang === 'te'
+            ? '\n\nPlease respond in Telugu.'
+            : '';
+      const prompt = `${systemPrompt}${langInstruction}\n\n${messages.map((m) => `[${m.role}] ${m.content}`).join('\n')}`;
+      const resp = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, prompt, temperature, stream: false }),
+      });
+      if (!resp.ok) throw new Error(`Ollama error: ${resp.statusText}`);
+      // Parse Ollama's response - it returns a single JSON object with 'response' field
+      const data = await resp.json();
+      const text = data.response || '';
+      stream = (async function* () {
+        yield { choices: [{ delta: { content: text } }] } as any;
+      })();
+    } else {
+      stream = await effectiveClient.chat.completions.create({
+        model,
+        max_tokens: 400,
+        temperature: typeof temperature === 'number' ? temperature : undefined,
+        messages: [{ role: 'system', content: systemPrompt }, ...messages],
+        stream: true,
+      });
+    }
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
